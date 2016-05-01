@@ -18,6 +18,10 @@
 // to make it available:
 //var fs = require("fs");
 
+
+// the flow are name with a static file name to be easier to use in docker container
+// Aurelien Bruno <aurelbruno06@gmail.com>
+
 module.exports = {
     // the tcp port that the Node-RED web server is listening on
     uiPort: 1880,
