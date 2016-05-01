@@ -8,4 +8,3 @@ RUN npm config ls -l
 COPY ./static.js /root/.node-red/settings.js
 EXPOSE 1880
 ENTRYPOINT ["/usr/bin/node-red"]
-
