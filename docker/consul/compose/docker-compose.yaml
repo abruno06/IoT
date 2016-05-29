@@ -1,0 +1,19 @@
+version: '2'
+services:
+  consul1:
+    image: t/consul-server:latest
+    networks:
+    - consul-ring
+  consul2:
+    image: t/consul-server:latest
+    networks:
+    - consul-ring
+  consul3:
+    image: t/consul-server:latest
+    networks:
+    - consul-ring
+
+networks:
+  consul-ring:
+    driver: bridge
+
