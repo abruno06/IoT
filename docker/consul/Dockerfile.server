@@ -1,0 +1,9 @@
+FROM aurelbruno06/consul_base
+MAINTAINER Aurelien Bruno <aurelbruno06@gmail.com>
+RUN echo "v1.0.0" > /tmp/version
+ADD ./consul.d /etc/consul.d
+ADD start.sh /root/
+#ENTRYPOINT ["/usr/bin/consul","agent","-server","-bootstrap-expect","3","-data-dir","/tmp/consul","-config-dir","/etc/consul.d"]
+ENTRYPOINT ["/root/start.sh"]
+EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 53/udp
+
