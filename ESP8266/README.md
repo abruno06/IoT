@@ -48,4 +48,4 @@ ESP8266->ESP8266: Load config.json
 ESP8266->MQTTBroker: Publish <config.publish>
 ESP8266->MQTTBroker: Subscribe <config.subscribe>
 
-[BootSequence Diagram](ESP8266/bootsequence.svg)
+[BootSequence Diagram](/bootsequence.svg)
