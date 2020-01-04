@@ -8,7 +8,7 @@ main.py
 sydca_app.py
 boot.json
 
-''' code
+``` JSON
 {
     "wifi": {
         "ssid": "<bootssid>",
@@ -25,7 +25,8 @@ boot.json
     }
 }
 
-'''
+```
+
 
 and if you plan to use MCP23017
 add the 
