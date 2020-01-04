@@ -26,7 +26,7 @@ boot.json
 }
 
 ```
-
+ 
 
 and if you plan to use MCP23017
 add the 
