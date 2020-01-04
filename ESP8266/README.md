@@ -86,3 +86,10 @@ Template config.json
 }
 
 ```
+
+should be send as JSON String base64 encoded into the MQTT message using this format
+
+``` JSON
+{"topic":"esp_bootconfig/<boardid>","payload":{"id":"<boardid>","msg":{"action":"bootstrap","value":"Base64(<JSON String>)"},"systemtime":"20200104 140952.32","flash_id":132456},"qos":0,"retain":false}
+
+```
