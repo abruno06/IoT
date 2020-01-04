@@ -7,6 +7,7 @@ import machine
 import network
 import esp
 from time import sleep,time
+import ure
 #from machine import I2C, Pin
 from mcp230xx import MCP23017
 
@@ -202,7 +203,11 @@ def boot_init():
     bootconfig = ujson.load(initfile);
     initfile.close()
     bootconfig["board"]={}
-    bootconfig["board"]["id"]=str(esp.flash_id())
+    machid = str(machine.unique_id())
+    machid = ure.sub("\\\\x", "", machid)
+    machid = ure.sub("b'", "", machid)
+    machid = ure.sub("'", "", machid)
+    bootconfig["board"]["id"]=machid
     do_wifi_connect(bootconfig)
     do_mqtt_boot_connect(bootconfig)
     global waitConfig 
@@ -217,7 +222,11 @@ def main():
     print("Hello Welcome to SYDCA ESP APP")
     
     print("Flash_id:"+str(esp.flash_id()))
-    #print("Machine Id:"+str(machine.unique_id().decode()))
+    machid = str(machine.unique_id())
+    machid = ure.sub("\\\\x", "", machid)
+    machid = ure.sub("b'", "", machid)
+    machid = ure.sub("'", "", machid)
+    print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
     boot_init()
     #print(initfile.readlines())

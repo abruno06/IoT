@@ -35,17 +35,4 @@ mcp230xx.py file
 
 Boot Sequence
 
-Participant ESP8266
-Participant MQTTBroker
-MQQTClientBootMrg->MQTTBroker: Subscribe /esp_boot
-ESP8266->MQTTBroker: Publish /esp_boot
-ESP8266->MQTTBroker: Subscribe /esp_bootconfig/<machine.id>
-MQTTBroker->MQQTClientBootMrg: Publish on /esp_boot 
-MQQTClientBootMrg->MQQTClientBootMrg: Build <machine.id> config.json
-MQQTClientBootMrg->MQTTBroker: Publish config.json /esp_bootconfig/<machine.id>
-MQTTBroker->ESP8266: Publish config.json /esp_bootconfig/<machine.id>
-ESP8266->ESP8266: Load config.json
-ESP8266->MQTTBroker: Publish <config.publish>
-ESP8266->MQTTBroker: Subscribe <config.subscribe>
-
 [BootSequence Diagram](bootsequence.svg)
