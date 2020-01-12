@@ -124,6 +124,9 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"] == "mcp_set_port":
             print("MCP Set Port")
             Sensors.set_mcp_port_info(msgDict["msg"]["value"])
+        if msgDict["msg"]["action"] == "ds18b20":
+            print("ds18b20 read")
+            Sensors.ssend_ds18b20_info(mqttc)
     except BaseException as e:
         print("An exception occurred")
         import sys
@@ -209,10 +212,11 @@ def boot_init():
     bootconfig = ujson.load(initfile)
     initfile.close()
     bootconfig["board"] = {}
-    machid = str(machine.unique_id())
-    machid = ure.sub("\\\\x", "", machid)
-    machid = ure.sub("b'", "", machid)
-    machid = ure.sub("'", "", machid)
+    import ubinascii
+    machid = ubinascii.hexlify(machine.unique_id()).decode()
+    #machid = ure.sub("\\\\x", "", machid)
+    #machid = ure.sub("b'", "", machid)
+    #machid = ure.sub("'", "", machid)
     bootconfig["board"]["id"] = machid
     do_wifi_connect(bootconfig)
     do_mqtt_boot_connect(bootconfig)
