@@ -76,7 +76,7 @@ class sensors:
             if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "output" in self.config["mcp23017"]["pins"]):
                 output_list = self.config["mcp23017"]["pins"]["output"]
                 for i in range(len(output_list)):
-                    self.mcpboard.output(input_list[i],value[i])
+                    self.mcpboard.output(output_list[i],value[i])
             print("mcp is set")
         except  BaseException as e:
             print("sensors:An exception occurred during mcp setting")
