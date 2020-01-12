@@ -37,9 +37,15 @@ def save_init_file(data):
 
 
 def do_wifi_connect(config):
+    
+    ap_if = network.WLAN(network.AP_IF)  
+    ap_if.active(False)
     wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
+    wlan.active(False)
+   
     if not wlan.isconnected():
+        wlan.active(True)
+        wlan.config(dhcp_hostname=config["board"]["id"])
         print('connecting to '+config['wifi']['ssid']+' network...')
         wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
         while not wlan.isconnected():
