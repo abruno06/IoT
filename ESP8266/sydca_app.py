@@ -126,7 +126,7 @@ def mqtt_subscribe(topic, msg):
             Sensors.set_mcp_port_info(msgDict["msg"]["value"])
         if msgDict["msg"]["action"] == "ds18b20":
             print("ds18b20 read")
-            Sensors.ssend_ds18b20_info(mqttc)
+            Sensors.send_ds18b20_info(mqttc)
     except BaseException as e:
         print("An exception occurred")
         import sys
