@@ -130,35 +130,6 @@ def mqtt_subscribe(topic, msg):
         sys.print_exception(e)
 
 
-def send_dht_info(config):
-    global dhtsensor
-    global mqttc
-    try:
-        if (config["board"]["capabilities"]["dht"]):
-            if dhtsensor is None:
-                print("Creating DHT sensor")
-                dhtsensor = dht.DHT22(machine.Pin(
-                    config["board"]["pins"]["dht"]))
-                sleep(5)
-            dhtsensor.measure()
-            print(timeStr(rtc.datetime()))
-            print(dhtsensor.temperature())  # eg. 23.6 (°C)
-            print(dhtsensor.humidity())    # eg. 41.3 (% RH)
-            dhtjst = {}
-            dhtjsh = {}
-            dhtjst["value"] = dhtsensor.temperature()
-            dhtjsh["value"] = dhtsensor.humidity()
-            mqttc.publish(config["mqtt"]["topic"]["publish"]+"/" +
-                          config["board"]["id"]+"/temperature", ujson.dumps(dhtjst))
-            mqttc.publish(config["mqtt"]["topic"]["publish"]+"/" +
-                          config["board"]["id"]+"/humidity", ujson.dumps(dhtjsh))
-        else:
-            print("dht is not activate")
-    except BaseException as e:
-        print("An exception occurred during dht reading")
-        import sys
-        sys.print_exception(e)
-
 
 def do_mqtt_boot_connect(config):
     from umqtt.simple import MQTTClient
