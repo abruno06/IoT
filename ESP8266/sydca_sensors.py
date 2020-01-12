@@ -5,13 +5,26 @@ import ujson
 import ubinascii
 from mcp230xx import MCP23017
 from time import sleep,time
-from machine import RTC
+from machine import RTC, I2C, Pin
 
 
+#"board": {
+#       "id": "sydca_esp_001",
+#        "pins": {
+#            "ds18b20":5,
+#            "dht": 14,
+#            "sda": 13,
+#            "scl": 12
+#        },
+#        "i2c": {
+#            "mcp23017": "0x20"
+#        },
 
 
 class sensors:
     dhtsensor = None
+    mcpboard = None
+    i2cbus = None
     rtc = RTC()
 
     def __init__(self,config):
@@ -20,7 +33,28 @@ class sensors:
             if self.dhtsensor is None:
                 print("sensors:Creating DHT sensor")
                 self.dhtsensor = dht.DHT22(machine.Pin(self.config["board"]["pins"]["dht"]))
-
+        if (self.config["board"]["pins"]["sda"] and self.config["board"]["pins"]["scl"] ):
+            if (self.i2cbus is None):
+                self.i2cbus = I2C( sda=Pin(self.config["board"]["pins"]["sda"]),scl=Pin(self.config["board"]["pins"]["scl"]),freq=20000)
+        if (self.config["board"]["capabilities"]["mcp23017"]):
+            if (self.mcpboard is None):
+                print("sensors: MCP Board initializing")
+                self.mcpboard = MCP23017(self.i2cbus , address=int(self.config["board"]["i2c"]["mcp23017"]))
+                print("sensors: MCP Set input ports")
+                for pin_n in self.config["mcp23017"]["pins"]["input"]:
+                    self.mcpboard.setup(pin_n,Pin.IN)
+                    self.mcpboard.pullup(pin_n,True)
+                print("sensors: MCP Set output ports")
+                for pin_n in self.config["mcp23017"]["pins"]["output"]:
+                    self.mcpboard.setup(pin_n,Pin.OUT)
+                print("sensors: MCP Board initialized")
+                
+     #             "mcp23017":{
+     #   "pins":{
+     #       "input":[0,1,2,3],
+     #       "output":[4,5,6,7,8,9,10,11,12,13,14,15]
+     #   }
+    
     def send_mcp_info(self,mqttc):
 
         print("MCP")
