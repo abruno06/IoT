@@ -158,7 +158,7 @@ class sensors:
                 ds = ds18x20.DS18X20(ow)
                 roms = ds.scan()
                 ds.convert_temp()
-                time.sleep_ms(750) 
+                sleep(1) 
                 message = {}
                 for rom in roms:
                     probeId = ubinascii.hexlify(rom).decode();
