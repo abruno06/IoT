@@ -9,7 +9,7 @@ import esp
 from time import sleep,time
 import ure
 #from machine import I2C, Pin
-from mcp230xx import MCP23017
+from  sydca_sensors import sensors
 
 # Defined the globales variables
 
@@ -17,6 +17,8 @@ mqttc =None
 dhtsensor=None
 initconfig={}
 waitConfig = False
+Sensors = None
+
 
 from machine import RTC
 rtc = RTC()
@@ -54,7 +56,7 @@ def do_wifi_connect(config):
     import ntptime
     print('setting time')
     ntptime.settime() # set the rtc datetime from the remote server
-    print(timeStr(rtc.datetime()))    # get the date and time in UTC
+    #print(timeStr(rtc.datetime()))    # get the date and time in UTC
 
 def mqtt_boot_subscribe(topic,msg):
     print (str(topic))
@@ -87,6 +89,7 @@ def mqtt_boot_subscribe(topic,msg):
 def mqtt_subscribe(topic,msg):
     global initconfig
     global mqttc
+    global Sensors
     print (str(topic))
     print (msg)
     try:
@@ -97,7 +100,8 @@ def mqtt_subscribe(topic,msg):
         print("searching for action")
         if msgDict["msg"]["action"]=="dht":
             print("DHT")
-            send_dht_info(initconfig)
+            #send_dht_info(initconfig)
+            Sensors.send_dht_info(mqttc)
         if msgDict["msg"]["action"]=="id":
             print("ID")
             initconfig["board"]["name"]=msgDict["msg"]["value"]
@@ -106,9 +110,9 @@ def mqtt_subscribe(topic,msg):
             mqttc.disconnect()
             machine.reset()
             #boot_init()
-        if msgDict["msg"]["action"]=="mcp"
+        if msgDict["msg"]["action"]=="mcp":
             print("MCP")
-            send_mcp_info(initconfig)
+            Sensors.send_mcp_info(mqttc)
         
     except  BaseException as e:
         print("An exception occurred")
@@ -187,21 +191,25 @@ def do_mqtt_connect(config):
 def load_init_file():
     global initconfig
     global mqttc
+    global Sensors
     initfile = open('config.json','r');
     initconfig = ujson.load(initfile);
     initfile.close()
     print(initconfig)
+    Sensors = sensors(initconfig)
     mqttc.disconnect()
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
-    send_dht_info(initconfig)
+    Sensors.send_dht_info(mqttc)
+    #send_dht_info(initconfig)
     print("Running MQTT pub/sub")
     print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
     pubtime = time()
     while True:
         mqttc.check_msg()
         if (time()-pubtime)>= initconfig["mqtt"]["update"]:
-            send_dht_info(initconfig)
+            Sensors.send_dht_info(mqttc)
+            #send_dht_info(initconfig)
             pubtime=time()
             gc.collect()
     #    #sleep(0.5)
