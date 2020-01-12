@@ -81,8 +81,12 @@ Template config.json
     "mcp23017":{
           "pins":{
             "input":[0,1,2,3],//ports that will be input
+            "input_name":["port_0","port_1","port_2","port_3","port_4"],//name use in mqqt 
             "output":[4,5,6,7,8,9,10,11,12,13,14,15]// port that will be output
-        }
+        },
+         "topic": {
+            "publish": "mcp"
+         }
     }
     
     
