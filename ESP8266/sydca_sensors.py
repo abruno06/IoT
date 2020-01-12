@@ -33,10 +33,10 @@ class sensors:
             if self.dhtsensor is None:
                 print("sensors:Creating DHT sensor")
                 self.dhtsensor = dht.DHT22(machine.Pin(self.config["board"]["pins"]["dht"]))
-        if (self.config["board"]["pins"]["sda"] and self.config["board"]["pins"]["scl"] ):
+        if ( "sda" in self.config["board"]["pins"] and "scl" in self.config["board"]["pins"]):
             if (self.i2cbus is None):
                 self.i2cbus = I2C( sda=Pin(self.config["board"]["pins"]["sda"]),scl=Pin(self.config["board"]["pins"]["scl"]),freq=20000)
-        if (self.config["board"]["capabilities"]["mcp23017"]):
+        if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"]):
             if (self.mcpboard is None):
                 print("sensors: MCP Board initializing")
                 self.mcpboard = MCP23017(self.i2cbus , address=int(self.config["board"]["i2c"]["mcp23017"]))
