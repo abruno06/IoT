@@ -113,6 +113,9 @@ def mqtt_subscribe(topic,msg):
         if msgDict["msg"]["action"]=="mcp":
             print("MCP")
             Sensors.send_mcp_info(mqttc)
+        if msgDict["msg"]["action"]=="mcp_set":
+            print("MCP")
+            Sensors.send_mcp_info(msgDict["msg"]["value"])            
         
     except  BaseException as e:
         print("An exception occurred")
