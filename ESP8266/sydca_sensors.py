@@ -56,13 +56,31 @@ class sensors:
      #   }
     
     def send_mcp_info(self,mqttc):
-
-        print("MCP")
+        try:
+            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
+                input_list = self.config["mcp23017"]["pins"]["input"]
+                mcpinput=self.mcpboard.input_pins(input_list)
+            print("return")
+        except  BaseException as e:
+            print("sensors:An exception occurred during mcp reading")
+            import sys
+            sys.print_exception(e)
+            
+    def set_mcp_info(self,value):
+        try:
+            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
+                input_list = self.config["mcp23017"]["pins"]["input"]
+                mcpinput=self.mcpboard.input_pins(input_list)
+            print("return")
+        except  BaseException as e:
+            print("sensors:An exception occurred during mcp setting")
+            import sys
+            sys.print_exception(e)
 
     def send_dht_info(self,mqttc):
     
         try:
-            if (self.config["board"]["capabilities"]["dht"]):
+            if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
                 if self.dhtsensor is None:
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(self.config["board"]["pins"]["dht"]))
