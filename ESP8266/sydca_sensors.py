@@ -69,8 +69,25 @@ class sensors:
                     mcp_message[input_list_name[i]] = {
                         "pin": input_list[i], "value": mcpinput[i]}
 
-                mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/" +
-                              self.config["board"]["id"]+"/mcp", ujson.dumps(mcp_message))
+                mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" +
+                              self.config["board"]["id"]+"/inputs", ujson.dumps(mcp_message))
+        except BaseException as e:
+            print("sensors:An exception occurred during mcp reading")
+            import sys
+            sys.print_exception(e)
+
+    def send_mcp_info_topics(self, mqttc):
+        try:
+            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
+                input_list = self.config["mcp23017"]["pins"]["input"]
+                input_list_name = self.config["mcp23017"]["pins"]["input_name"]
+                mcpinput = self.mcpboard.input_pins(input_list)
+                mcp_message = {}
+                for i in range(len(input_list)):
+                    mcp_message = {"pin": input_list[i], "value": mcpinput[i]}
+                    mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" + self.config["board"]
+                                  ["id"]+"/input/"+str(input_list_name[i]), ujson.dumps(mcp_message))
+
         except BaseException as e:
             print("sensors:An exception occurred during mcp reading")
             import sys
