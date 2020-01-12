@@ -104,7 +104,8 @@ def mqtt_subscribe(topic,msg):
         if msgDict["msg"]["action"]=="boot":
             print("Boot")
             mqttc.disconnect()
-            boot_init()
+            machine.reset()
+            #boot_init()
         
     except  BaseException as e:
         print("An exception occurred")
