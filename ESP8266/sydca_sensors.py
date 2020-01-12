@@ -29,7 +29,7 @@ class sensors:
 
     def __init__(self,config):
         self.config = config
-        if (self.config["board"]["capabilities"]["dht"]):
+        if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
             if self.dhtsensor is None:
                 print("sensors:Creating DHT sensor")
                 self.dhtsensor = dht.DHT22(machine.Pin(self.config["board"]["pins"]["dht"]))
