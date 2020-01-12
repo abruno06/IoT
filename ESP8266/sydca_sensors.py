@@ -62,8 +62,9 @@ class sensors:
                 input_list_name = self.config["mcp23017"]["pins"]["input_name"]
                 mcpinput=self.mcpboard.input_pins(input_list)
                 mcp_message={}
-                for i in range(input_list.len()):
-                    mcp_message[input_list_name]={"pin":input_list[i],"value":mcpinput[i]}
+                for i in range(len(input_list)):
+                    mcp_message[input_list_name[i]]={"pin":input_list[i],"value":mcpinput[i]}
+                    
                 mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/"+self.config["board"]["id"]+"/mcp",ujson.dumps(mcp_message))
         except  BaseException as e:
             print("sensors:An exception occurred during mcp reading")
@@ -74,7 +75,7 @@ class sensors:
         try:
             if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "output" in self.config["mcp23017"]["pins"]):
                 output_list = self.config["mcp23017"]["pins"]["output"]
-                for i in range(output_list.len()):
+                for i in range(len(output_list)):
                     self.mcpboard.output(input_list[i],value[i])
             print("mcp is set")
         except  BaseException as e:
