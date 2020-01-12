@@ -106,6 +106,9 @@ def mqtt_subscribe(topic,msg):
             mqttc.disconnect()
             machine.reset()
             #boot_init()
+        if msgDict["msg"]["action"]=="mcp"
+            print("MCP")
+            send_mcp_info(initconfig)
         
     except  BaseException as e:
         print("An exception occurred")
