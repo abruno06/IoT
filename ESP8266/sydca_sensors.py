@@ -6,7 +6,7 @@ import ubinascii
 from mcp230xx import MCP23017
 from time import sleep, time
 from machine import RTC, I2C, Pin
-
+import ubinascii
 
 # "board": {
 #       "id": "sydca_esp_001",
@@ -142,6 +142,31 @@ class sensors:
                               self.config["board"]["id"]+"/humidity", ujson.dumps(dhtjsh))
             else:
                 print("dht is not activate")
+        except BaseException as e:
+            print("sensors:An exception occurred during dht reading")
+            import sys
+            sys.print_exception(e)
+
+
+    def send_ds18b20_info(self, mqttc):
+        try:
+            if ("ds18b20" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ds18b20"]):
+                import onewire
+                import ds18x20
+                
+                ow = onewire.OneWire(Pin(self.config["board"]["pins"]["dls"]))
+                ds = ds18x20.DS18X20(ow)
+                roms = ds.scan()
+                ds.convert_temp()
+                sleep(1) 
+                message = {}
+                for rom in roms:
+                    probeId = ubinascii.hexlify(rom).decode();
+                    message = {"value": ds.read_temp(rom)}
+                    mqttc.publish(self.config["ds18b20"]["topic"]["publish"]+"/" + self.config["board"]
+                                  ["id"]+"/temperature/"+probeId, ujson.dumps(message))
+                    print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
+
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
