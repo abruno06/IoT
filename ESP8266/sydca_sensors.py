@@ -155,7 +155,7 @@ class sensors:
                 import ds18x20
                 
                 ow = onewire.OneWire(Pin(self.config["board"]["pins"]["dls"]))
-                ds = onewire.DS18X20(ow)
+                ds = ds18x20.DS18X20(ow)
                 roms = ds.scan()
                 ds.convert_temp()
                 time.sleep_ms(750) 
