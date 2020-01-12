@@ -146,6 +146,8 @@ class sensors:
             print("sensors:An exception occurred during dht reading")
             import sys
             sys.print_exception(e)
+
+
     def send_ds18b20_info(self, mqttc):
         try:
             if ("ds18b20" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ds18b20"]):
@@ -153,7 +155,7 @@ class sensors:
                 import ds18x20
                 
                 ow = onewire.OneWire(Pin(self.config["board"]["pins"]["dls"]))
-                ds = onewire.DS18B20(ow)
+                ds = onewire.DS18X20(ow)
                 roms = ds.scan()
                 ds.convert_temp()
                 time.sleep_ms(750) 
