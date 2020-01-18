@@ -205,6 +205,3 @@ copy code below as new flow into NodeRed
 
 
 
-
-
-<a href="@dht22" target="_blank" rel="noreferrer noopener">dht22</a>
