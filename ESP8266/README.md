@@ -207,4 +207,4 @@ copy code below as new flow into NodeRed
 
 
 
-<a href="#" onclick="find('@dht22');">dht22</a>
+<a href="@dht22">dht22</a>
