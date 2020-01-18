@@ -1,4 +1,3 @@
-# ESP8266 (ESP12F)
 
 - [ESP8266 (ESP12F)](#esp8266-esp12f)
   - [Package information](#package-information)
@@ -13,11 +12,18 @@
   - [Board Runtime](#board-runtime)
     - [Send commands to the board](#send-commands-to-the-board)
   - [Boot Manager using Node-Red](#boot-manager-using-node-red)
+- [Installing Micropython on the board](#installing-micropython-on-the-board)
+  - [Download esptool](#download-esptool)
+  - [Download Micropython](#download-micropython)
+  - [Connect to your computer](#connect-to-your-computer)
+  - [Get your board.id](#get-your-boardid)
+
+# ESP8266 (ESP12F)
 
 ## Package information
 
 Contain information about the ESP8266 integrated into the SYDCA ESP Board
-The Board should be first updated to Micropython and the following files should be uploaded into the ESP12F
+The Board should be first updated to [Micropython](http://docs.micropython.org/en/latest/index.html) and the following files should be uploaded into the ESP12F
 
 - boot.py
 - main.py
@@ -43,9 +49,10 @@ The Board should be first updated to Micropython and the following files should 
         "password": "<MQTT password>"
     }
 }
-
 ```
+board.id is added to this boot.json object
 
+board.id is the [machine.unique_id()](http://docs.micropython.org/en/latest/library/machine.html#machine.unique_id)
 
 ## Board behaviors
 
@@ -205,3 +212,38 @@ copy code below as new flow into NodeRed
 
 
 
+# Installing Micropython on the board
+you can found all detail [here](http://docs.micropython.org/en/latest/esp8266/esp8266/tutorial/intro.html#deploying-the-firmware)
+
+## Download esptool
+
+
+
+## Download Micropython
+
+[Download Page](https://micropython.org/download)
+
+Tested with v1.12
+https://micropython.org/resources/firmware/esp8266-20191220-v1.12.bin
+
+## Connect to your computer
+
+``` code
+esptool.py --port /dev/ttyUSB0 erase_flash
+```
+then 
+``` code
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20191220-v1.12.bin
+
+``` 
+## Get your board.id
+you can now get the machine id of your board that will be used as boot **board.id**
+
+``` python
+import machine
+import ubinascii
+print("board.id:"+ubinascii.hexlify(machine.unique_id()).decode())
+```
+keep it to be used later in your bootmanager
+
+Now Load application files
