@@ -1,5 +1,5 @@
 
-- [ESP8266 (ESP12F)](#esp8266-esp12f)
+- [SYDCA ESP (ESP8266-ESP12F)](#sydca-esp-esp8266-esp12f)
   - [Package information](#package-information)
     - [boot.json sample](#bootjson-sample)
   - [Board behaviors](#board-behaviors)
@@ -18,7 +18,7 @@
   - [Connect to your computer](#connect-to-your-computer)
   - [Get your board.id](#get-your-boardid)
 
-# ESP8266 (ESP12F)
+# SYDCA ESP (ESP8266-ESP12F)
 
 ## Package information
 
