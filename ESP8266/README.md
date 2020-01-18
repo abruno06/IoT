@@ -29,7 +29,7 @@ The Board should be first updated to [Micropython](http://docs.micropython.org/e
 - main.py
 - sydca_app.py
 - boot.json
-- mcp230xx.py (if you plan to use MCP23017 as i2C extension)
+- mcp230xx.py (if you plan to use MCP23017 as i2C extension). [original Author] (https://github.com/ShrimpingIt/micropython-mcp230xx) and [inspired by](https://github.com/adafruit/Adafruit_CircuitPython_MCP230xx)
 
 ### boot.json sample
 
