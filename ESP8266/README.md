@@ -123,7 +123,7 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 
 ## Board Runtime
 ## Send commmands to the board
-The Board access some commands that can be send to the MQTT listening queue
+The Board accept some commands that can be send to the MQTT listening queue
 
 Syntax is 
 ```json
@@ -139,10 +139,11 @@ Syntax is
 
 |Action|Value|Effect|Comment|
 |-------|---|------|-------|
-| boot |'null'| reboot the board | execute full cycle including configuration reload|
-| dht | 'null' | read the dht value | return value in dht topic |
-| ds18b20 | 'null' | read the ds18b20 value | return value in ds18b20 topic |
-| mcp | 'null'| read the mcp input ports status|return value(s) in mcp topic |
+| boot || reboot the board | execute full cycle including configuration reload|
+| dht |  | read the dht value | return value in dht topic |
+| ds18b20 |  | read the ds18b20 value | return value in ds18b20 topic |
+| mcp | | read the mcp input ports status|return value(s) in mcp topic with port value |
+| mcp_topic | | read the mcp input port status |return value(s) in mcp topic with  **mcp23017.input_name** value |
 |mcp_set|json array (i.e.[0,0,0,0,0,1,0,0,0,0,1])|will set all output port using array values|this is done in same order than field **mcp23017.output**|
 |mcp_set_port|{'port':<mcp port number>,'state':<0 or 1>}|will set the given port number to the given state|port should be in **mcp23017.output**|
 
