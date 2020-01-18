@@ -116,7 +116,7 @@ The Board will use the following sequence in order to get its complete configura
    
     "ds18b20":{
          "topic": {
-            "publish": "ds18b20" //MQTT root topic for ds18b20 /<ds18b20.topic.publish>/<board.id>/temperature/<ds18d20 id>
+            "publish": "ds18b20" //MQTT root topic for ds18b20 /<ds18b20.topic.publish>/<board.id>/temperature/<ds18d20 uid>
          }
     }
         
@@ -134,9 +134,9 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 ### Board capabilities
 
 
-As of today the board support the three extension below
+As of today the board support the three extensions below (see Runtime section for more detail about sending action)
 
-``` json
+```json
 
  "capabilities":
         {
@@ -151,25 +151,60 @@ As of today the board support the three extension below
 
 This is the DHT22 that have been implemented on the board 
 
-when query the board return on the result in the following manner
+when query the board return on the result with the following manner
+
+MQTT topic: **mqqt.topic.publish**/**config(board.id)**/temperature/
+MQTT message:`json object {value: [double]}`
+
+MQTT topic: **mqqt.topic.publish**/**config(board.id)**/humidity/
+MQTT message:`json object {value: [double]}`
 
 
 #### ds18b20
 
 It has been tested using 10 ds18b20 on the same bus
 
-when query the board return on the result in the following manner
+when query the board return on the result with the following manner
 
-
+MQTT topic: **ds18b20.topic.publish**/**config(board.id)**/temperature/**ds18b20.uid** 
+MQTT message:`json object {value: [double]}`
 
 #### mcp23017
 
 It currently support only one extension board
 
-when query the board return on the result in the following manner
+when query the board return on the result with the following manner
+- **requested action: "mcp"**
+
+    MQTT topic: **mcp23017.topic.publish**/**config(board.id)**/inputs/
+    MQTT message:`json object {mcp23017.pins.input_name[i]: {"pin":[number],"value":[true|false]}, ...}`
+
+
+    *example*
+
+    ```json 
+    {
+        "port_3":{"pin":3,"value":true},
+    "port_2":{"pin":2,"value":false},
+    "port_1":{"pin":1,"value":true},
+    "port_0":{"pin":0,"value":true},
+    "port_4":{"pin":4,"value":true}
+    }
+    ```
+
+- **requested action: "mcp_topic"**
+    MQTT topic: **mcp23017.topic.publish**/**config(board.id)**/input/**mcp23017.pins.input_name[i]**
+
+    *example:*
+    **_topic mcp/sydca_esp_001/input/port_3_**
+
+    ```json 
+        {"pin":3,"value":true}
+    ```
 
 
 ## Board Runtime
+
 ### Send commands to the board
 The Board accept some commands that can be send to the MQTT listening queue
 
