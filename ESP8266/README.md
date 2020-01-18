@@ -17,6 +17,7 @@
   - [Download Micropython](#download-micropython)
   - [Connect to your computer](#connect-to-your-computer)
   - [Get your board.id](#get-your-boardid)
+- [References](#references)
 
 # SYDCA ESP (ESP8266-ESP12F)
 
@@ -282,3 +283,10 @@ print("board.id:"+ubinascii.hexlify(machine.unique_id()).decode())
 keep it to be used later in your bootmanager
 
 Now Load application files
+
+# References
+
+* https://github.com/mchobby/esp8266-upy
+* https://github.com/ShrimpingIt/micropython-mcp230xx/blob/master/mcp.py
+* http://docs.micropython.org/en/latest/esp8266/general.html
+* ...
