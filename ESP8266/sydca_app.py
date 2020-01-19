@@ -130,7 +130,7 @@ def mqtt_subscribe(topic, msg):
             Sensors.send_ds18b20_info(mqttc)
         if msgDict["msg"]["action"]=="ota":
             print("ota will be loaded")
-            sydca_ota.save_ota_file(ubinascii.a2b_base64(msgDict["msg"]["value"]))
+            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],ubinascii.a2b_base64(msgDict["msg"]["value"]["data"]))
 
     except BaseException as e:
         print("An exception occurred")

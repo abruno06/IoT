@@ -1,7 +1,12 @@
 
 
-def save_ota_file(data):
+def save_ota_file(filename,data):
     print("Save ota file")
-    otafile = open('sydca_ota.py', 'w')
+    otafile = open(filename, 'w')
     print(data.decode(), file=otafile)
     otafile.close()
+
+def test():
+    print("test")
+    
+
