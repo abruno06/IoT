@@ -9,6 +9,7 @@ import dht
 import ubinascii
 import ujson
 import gc
+import sydca_ota
 print("Load sydca_app")
 #from machine import I2C, Pin
 
@@ -127,6 +128,10 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"] == "ds18b20":
             print("ds18b20 read")
             Sensors.send_ds18b20_info(mqttc)
+        if msgDict["msg"]["action"]=="ota":
+            print("ota will be loaded")
+            sydca_ota.save_ota_file(ubinascii.a2b_base64(msgDict["msg"]["value"]))
+
     except BaseException as e:
         print("An exception occurred")
         import sys

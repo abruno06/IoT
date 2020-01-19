@@ -185,7 +185,7 @@ when query the board return on the result with the following manner
 
     ```json 
     {
-        "port_3":{"pin":3,"value":true},
+    "port_3":{"pin":3,"value":true},
     "port_2":{"pin":2,"value":false},
     "port_1":{"pin":1,"value":true},
     "port_0":{"pin":0,"value":true},
@@ -270,7 +270,6 @@ esptool.py --port /dev/ttyUSB0 erase_flash
 then 
 ``` code
 esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20191220-v1.12.bin
-
 ``` 
 ## Get your board.id
 you can now get the machine id of your board that will be used as boot **board.id**
