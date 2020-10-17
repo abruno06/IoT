@@ -17,6 +17,7 @@
   - [Download Micropython](#download-micropython)
   - [Connect to your computer](#connect-to-your-computer)
   - [Get your board.id](#get-your-boardid)
+- [Work in Progress](#work-in-progress)
 - [References](#references)
 
 # SYDCA ESP (ESP8266-ESP12F)
@@ -298,6 +299,11 @@ print("board.id:"+ubinascii.hexlify(machine.unique_id()).decode())
 keep it to be used later in your bootmanager
 
 Now Load application files
+
+
+# Work in Progress
+
+Add the ADS1x15 extension board
 
 # References
 
