@@ -274,6 +274,10 @@ you can found all detail [here](http://docs.micropython.org/en/latest/esp8266/es
 Tested with v1.12
 https://micropython.org/resources/firmware/esp8266-20191220-v1.12.bin
 
+Tested with v1.13
+https://micropython.org/resources/firmware/esp8266-20200911-v1.13.bin
+
+
 ## Connect to your computer
 
 ``` code
@@ -281,7 +285,7 @@ esptool.py --port /dev/ttyUSB0 erase_flash
 ```
 then 
 ``` code
-esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20191220-v1.12.bin
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20200911-v1.13.bin
 ``` 
 ## Get your board.id
 you can now get the machine id of your board that will be used as boot **board.id**
