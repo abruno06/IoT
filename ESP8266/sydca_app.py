@@ -9,8 +9,9 @@ import dht
 import ubinascii
 import ujson
 import gc
+import sydca_ota
 print("Load sydca_app")
-#from machine import I2C, Pin
+# from machine import I2C, Pin
 
 # Defined the globales variables
 
@@ -127,6 +128,14 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"] == "ds18b20":
             print("ds18b20 read")
             Sensors.send_ds18b20_info(mqttc)
+        if msgDict["msg"]["action"]=="ota":
+            print("ota will be loaded")
+            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],ubinascii.a2b_base64(msgDict["msg"]["value"]["data"]))
+            Sensors.send_health_info(mqttc)
+        if msgDict["msg"]["action"]=="hello":
+            print("hello will be loaded")
+            Sensors.send_health_info(mqttc)
+
     except BaseException as e:
         print("An exception occurred")
         import sys
@@ -178,7 +187,7 @@ def do_mqtt_connect(config):
     mqttc.set_callback(mqtt_subscribe)
     mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
-
+    mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
 
 def load_init_file():
     global initconfig
@@ -201,6 +210,7 @@ def load_init_file():
         mqttc.check_msg()
         if (time()-pubtime) >= initconfig["mqtt"]["update"]:
             Sensors.send_dht_info(mqttc)
+            Sensors.send_health_info(mqttc)
             # send_dht_info(initconfig)
             pubtime = time()
             gc.collect()

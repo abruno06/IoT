@@ -2,3 +2,5 @@ ESP8266/boot.json
 ESP8266/init.json
 ESP8266/.vscode/settings.json
 ESP8266/bootmgr.json
+ESP8266/config.json
+ESP8266/init-1.json

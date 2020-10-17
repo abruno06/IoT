@@ -30,17 +30,29 @@ class sensors:
     def __init__(self, config):
         self.config = config
         if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
-            if self.dhtsensor is None:
-                print("sensors:Creating DHT sensor")
-                self.dhtsensor = dht.DHT22(machine.Pin(
-                    self.config["board"]["pins"]["dht"]))
+            try:
+                if self.dhtsensor is None:
+                    print("sensors:Creating DHT sensor")
+                    self.dhtsensor = dht.DHT22(machine.Pin(
+                     self.config["board"]["pins"]["dht"]))
+            except BaseException as e:
+                print("sensors:An exception occurred during dht activation")
+                import sys
+                sys.print_exception(e)
+
         if ("sda" in self.config["board"]["pins"] and "scl" in self.config["board"]["pins"]):
-            if (self.i2cbus is None):
-                self.i2cbus = I2C(sda=Pin(self.config["board"]["pins"]["sda"]), scl=Pin(
+            try:
+                if (self.i2cbus is None):
+                    self.i2cbus = I2C(sda=Pin(self.config["board"]["pins"]["sda"]), scl=Pin(
                     self.config["board"]["pins"]["scl"]), freq=20000)
+            except BaseException as e:
+                print("sensors:An exception occurred during I2C activation")
+                import sys
+                sys.print_exception(e)
         if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"]):
-            if (self.mcpboard is None):
-                print("sensors: MCP Board initializing")
+            try:
+                if (self.mcpboard is None):
+                  print("sensors: MCP Board initializing")
                 self.mcpboard = MCP23017(self.i2cbus, address=int(
                     self.config["board"]["i2c"]["mcp23017"]))
                 print("sensors: MCP Set input ports")
@@ -51,6 +63,10 @@ class sensors:
                 for pin_n in self.config["mcp23017"]["pins"]["output"]:
                     self.mcpboard.setup(pin_n, Pin.OUT)
                 print("sensors: MCP Board initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during mcp23017 activation")
+                import sys
+                sys.print_exception(e)
 
      #             "mcp23017":{
      #   "pins":{
@@ -71,6 +87,8 @@ class sensors:
 
                 mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" +
                               self.config["board"]["id"]+"/inputs", ujson.dumps(mcp_message))
+            else:
+                print("mcp23017 is not activated")
         except BaseException as e:
             print("sensors:An exception occurred during mcp reading")
             import sys
@@ -87,7 +105,8 @@ class sensors:
                     mcp_message = {"pin": input_list[i], "value": mcpinput[i]}
                     mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/input/"+str(input_list_name[i]), ujson.dumps(mcp_message))
-
+            else:
+                print("mcp23017 is not activated")
         except BaseException as e:
             print("sensors:An exception occurred during mcp reading")
             import sys
@@ -100,7 +119,9 @@ class sensors:
                 for i in range(len(output_list)):
                     self.mcpboard.output(output_list[i], value[i])
                     print("port "+str(output_list[i])+":"+str(value[i]))
-            print("mcp is set")
+                print("mcp is set")
+            else:
+                print("mcp23017 is not available")
         except BaseException as e:
             print("sensors:An exception occurred during mcp setting")
             import sys
@@ -114,7 +135,9 @@ class sensors:
                     print("port "+str(value["port"])+":"+str(value["state"]))
                 else:
                     print(str(value["port"])+" not found")
-            print("mcp is set")
+                print("mcp is set")
+            else:
+                print("mcp23017 is not available")
         except BaseException as e:
             print("sensors:An exception occurred during mcp setting")
             import sys
@@ -166,7 +189,8 @@ class sensors:
                     mqttc.publish(self.config["ds18b20"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/temperature/"+probeId, ujson.dumps(message))
                     print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
-
+            else:
+                print("ds18b20 is not activate")     
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
@@ -179,3 +203,17 @@ class sensors:
         m = "0"+str(rtcT[5]) if (rtcT[5] < 10) else str(rtcT[5])
         S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
         return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
+    
+    
+    def send_health_info(self, mqttc):
+        try:
+           
+                    message = {"value": "ok"}
+                    mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
+                                  ["id"], ujson.dumps(message))
+                    print("health ok")
+           
+        except BaseException as e:
+            print("sensors:An exception occurred during health reading")
+            import sys
+            sys.print_exception(e)
