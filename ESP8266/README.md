@@ -85,6 +85,12 @@ The Board will use the following sequence in order to get its complete configura
             "ds18b20":false,
             "mcp23017":true,
             "oled":false
+        },
+        "system":
+        {
+            "topic": {
+            "publish": "health" //topic where hello message response are send back
+         }
         }
 
     },
@@ -97,7 +103,8 @@ The Board will use the following sequence in order to get its complete configura
         "topic": {
             "publish": "<pub topic>", // default publish topic
             "subscribe": "<sub topic>", // board will listen to topic /<subscribe>/<board.id> for incoming order
-            "register":"sensors",
+            "broadcast": "<sub broadcast topic>", // to send ,essage to all sensors
+            "register":"sensors", //send message about the sensor
             "unregister":"disconnect"
         },
         "user": "mqtt user",
@@ -221,6 +228,8 @@ Syntax is
 }
 ```
 
+
+
 |Action|Value|Effect|Comment|
 |-------|---|------|-------|
 | boot || reboot the board | execute full cycle including configuration reload|
@@ -230,6 +239,9 @@ Syntax is
 | mcp_topic | | read the mcp input port status |return value(s) in mcp topic with  **mcp23017.input_name** value |
 |mcp_set|json array (i.e.[0,0,0,0,0,1,0,0,0,0,1])|will set all output port using array values|this is done in same order than field **mcp23017.output**|
 |mcp_set_port|{'port':<mcp port number>,'state':<0 or 1>}|will set the given port number to the given state|port should be in **mcp23017.output**|
+| hello | | send back 'ok' in a message | can be used as health check mechanism, send every <update> sec |
+
+
 
 
 

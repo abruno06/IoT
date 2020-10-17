@@ -187,7 +187,7 @@ def do_mqtt_connect(config):
     mqttc.set_callback(mqtt_subscribe)
     mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
-
+    mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
 
 def load_init_file():
     global initconfig
