@@ -288,6 +288,13 @@ then
 ``` code
 esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20200911-v1.13.bin
 ``` 
+
+once done reset your board FS using
+``` code
+uos.VfsLfs2.mkfs(bdev)
+```
+
+
 ## Get your board.id
 you can now get the machine id of your board that will be used as boot **board.id**
 
@@ -309,5 +316,6 @@ Add the ADS1x15 extension board
 
 * https://github.com/mchobby/esp8266-upy
 * https://github.com/ShrimpingIt/micropython-mcp230xx/blob/master/mcp.py
+* https://github.com/micropython/micropython/blob/master/drivers/display/ssd1306.py
 * http://docs.micropython.org/en/latest/esp8266/general.html
 * ...
