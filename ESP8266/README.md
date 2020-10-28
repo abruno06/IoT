@@ -33,6 +33,8 @@ The Board should be first updated to [Micropython](http://docs.micropython.org/e
 - boot.json
 - mcp230xx.py (if you plan to use MCP23017 as i2C extension). [original Author] (https://github.com/ShrimpingIt/micropython-mcp230xx) and [inspired by](https://github.com/adafruit/Adafruit_CircuitPython_MCP230xx)
 
+Due to the code size it need to be cross-compile using micropython process. the .mpy files are attached in the project for easy use but this is better to cross compile yourself
+
 ### boot.json sample
 
 ``` JSON
@@ -85,7 +87,7 @@ The Board will use the following sequence in order to get its complete configura
             "dht":true,
             "ds18b20":false,
             "mcp23017":true,
-            "oled":false
+            "ssd1306":false
         },
         "system":
         {
@@ -104,7 +106,7 @@ The Board will use the following sequence in order to get its complete configura
         "topic": {
             "publish": "<pub topic>", // default publish topic
             "subscribe": "<sub topic>", // board will listen to topic /<subscribe>/<board.id> for incoming order
-            "broadcast": "<sub broadcast topic>", // to send ,essage to all sensors
+            "broadcast": "<sub broadcast topic>", // to send message to all sensors
             "register":"sensors", //send message about the sensor
             "unregister":"disconnect"
         },
@@ -140,6 +142,10 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 {"topic":"esp_bootconfig/<boardid>","payload":{"id":"<boardid>","msg":{"action":"bootstrap","value":"Base64(<JSON String>)"},"systemtime":"20200104 140952.32","flash_id":132456},"qos":0,"retain":false}
 
 ```
+
+The board will listen configuration on the following topic
+ **"mqtt"."topic"."subscribe**/**"board"."id"**/#
+
 ### Board capabilities
 
 
@@ -152,6 +158,7 @@ As of today the board support the three extensions below (see Runtime section fo
             "dht":true,
             "ds18b20":false,
             "mcp23017":true,
+            "ssd1306":true
         }
 
 ```
@@ -210,6 +217,33 @@ when query the board return on the result with the following manner
     ```json 
         {"pin":3,"value":true}
     ```
+
+#### ssd1306
+
+This is a small OLED display you can send messages to it that way. Max line length is 16 characters 
+MQTT topic: **"mqtt"."topic"."subscribe**/**"board"."id"**/# or broadcast topic
+MQTT message:
+```json
+{
+"id":"<Board Id>",
+"msg":
+    {
+        "action":"ssd1306",
+        "value":{
+            "message":[
+                "line 1",
+                "line 2",
+                "line 3",
+                "line 4",
+                "line 5",
+                "line 6",
+                "line 7",
+                "line 8",
+            ]
+        }
+    }
+}
+```
 
 
 ## Board Runtime
