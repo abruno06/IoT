@@ -81,7 +81,10 @@ The Board will use the following sequence in order to get its complete configura
             "scl": 12  // i2C SCL Pin on the board
         },
         "i2c": {
-            "mcp23017": "0x20" //mcp23017 i2c address
+            "mcp23017": "0x20", //mcp23017 i2c address
+            "ssd1306" : "0x30", //ssd1306 ic2i2c address
+            "topic": {
+            "publish": "i2c" // topic where i2c information get published
         },
         "capabilities":
         {
