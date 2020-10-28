@@ -219,13 +219,13 @@ when query the board return on the result with the following manner
         {"pin":3,"value":true}
 ```
 
-
+  
 
 #### ssd1306
 
 
 This is a small OLED display you can send messages to it that way. Max line length is **16** characters 
-MQTT topic: **"mqtt"."topic"."subscribe**/**"board"."id"**/# or broadcast topic
+MQTT topic: **mqtt.topic.subscribe**/**board.id**/# or broadcast topic
 MQTT message:
 ```json
 {
