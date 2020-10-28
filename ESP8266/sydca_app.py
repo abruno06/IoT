@@ -148,9 +148,12 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"]=="i2cscan":
             print("I2C Scan started")
             Sensors.scan_i2c(mqttc)
+        if msgDict["msg"]["action"]=="ssd1306":
+            print("I2C ssd1306 started")
+            Sensors.message_oled(msgDict["msg"]["value"])
         if msgDict["msg"]["action"]=="test":
             print("I2C TEST started")
-            Sensors.test_oled(mqttc)
+            Sensors.test_oled(msgDict["msg"]["value"])
             
     except BaseException as e:
         print("An exception occurred at subscribe stage")

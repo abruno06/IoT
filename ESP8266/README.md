@@ -241,6 +241,9 @@ Syntax is
 |mcp_set|json array (i.e.[0,0,0,0,0,1,0,0,0,0,1])|will set all output port using array values|this is done in same order than field **mcp23017.output**|
 |mcp_set_port|{'port':<mcp port number>,'state':<0 or 1>}|will set the given port number to the given state|port should be in **mcp23017.output**|
 | hello | | send back 'ok' in a message | can be used as health check mechanism, send every <update> sec |
+| i2cscan |  | give you list of i2c element in mqqt topic | |
+| ssd1306 | {'message':[1-8 lines]}| display the one to eight line in the display| |
+| test | | do not used it | for dev only|
 
 
 

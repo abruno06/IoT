@@ -257,15 +257,34 @@ class sensors:
             import sys
             sys.print_exception(e)
 
-    def test_oled(self,mqttc):
+    def message_oled(self,value):
         try:
-            #import ssd1306
-           # oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
-          #  oled.fill(0)
-         #   oled.text("Hello World", 0, 0)
-         #   oled.show()
+            import ssd1306
+            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+            oled.fill(0)
+            idx = 0
+            for line in value["message"]:
+                oled.text(line, 0, idx*8)
+                idx+=1 
+            oled.show()
+            print("oled")
+        except BaseException as e:
+            print("sensors:An exception occurred during oled message")
+            import sys
+            sys.print_exception(e)
+
+    def test_oled(self,value):
+        try:
+            import ssd1306
+            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+            oled.fill(0)
+            idx = 0
+            for line in value["message"]:
+                oled.text(line, 0, idx*8)
+                idx+=1 
+            oled.show()
             print("oled")
         except BaseException as e:
             print("sensors:An exception occurred during oled test")
             import sys
-            sys.print_exception(e)
+            sys.print_exception(e)            
