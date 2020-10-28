@@ -5,6 +5,8 @@
   - [Board behaviors](#board-behaviors)
     - [Boot Sequence](#boot-sequence)
   - [config.json template](#configjson-template)
+  - [MQQT detail](#mqqt-detail)
+    - [Boot Time](#boot-time)
     - [Board capabilities](#board-capabilities)
       - [dht](#dht)
       - [ds18b20](#ds18b20)
@@ -147,11 +149,26 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 
 ```
 
+## MQQT detail
+
+### Boot Time
+
+The board send a boot message to topic 
+
+**mqqt.topic.register**/
+
 The board will listen configuration on the following topic
+
  **mqtt.topic.subscribe**/**board.id**/#
+
+The board.id is the value from built-in information see below how retrieve it.
 
 ### Board capabilities
 
+During runtime after the configuration get loaded the board will listen on following topics. At this stage the board.id is the one from the configuration rather than the original board.id used at the boot stage
+
+**mqtt.topic.subscribe**/**board.id**/#
+**mqtt.topic.broadcast**/#
 
 As of today the board support the three extensions below (see Runtime section for more detail about sending action)
 
