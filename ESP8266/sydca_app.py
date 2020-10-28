@@ -20,7 +20,7 @@ dhtsensor = None
 initconfig = {}
 waitConfig = False
 Sensors = None
-
+IPAddr = None
 
 rtc = RTC()
 
@@ -42,25 +42,32 @@ def save_init_file(data):
 
 
 def do_wifi_connect(config):
+    global IPAddr
+    try:
+        ap_if = network.WLAN(network.AP_IF)
+        ap_if.active(False)
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(False)
 
-    ap_if = network.WLAN(network.AP_IF)
-    ap_if.active(False)
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(False)
-
-    if not wlan.isconnected():
-        wlan.active(True)
-        wlan.config(dhcp_hostname=config["board"]["id"])
-        print('connecting to '+config['wifi']['ssid']+' network...')
-        wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
-        while not wlan.isconnected():
-            pass
-    print('network config:', wlan.ifconfig())
-    import ntptime
-    print('setting time')
-    ntptime.settime()  # set the rtc datetime from the remote server
+        if not wlan.isconnected():
+            wlan.active(True)
+            wlan.config(dhcp_hostname=config["board"]["id"])
+            print('connecting to '+config['wifi']['ssid']+' network...')
+            wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
+            while not wlan.isconnected():
+                pass
+        print('network config:', wlan.ifconfig())
+        IPAddr = wlan.ifconfig()
+        import ntptime
+        print('setting time')
+        ntptime.settime()  # set the rtc datetime from the remote server
     # print(timeStr(rtc.datetime()))    # get the date and time in UTC
-
+    except BaseException as e:
+        print("An exception occurred during do_wifi_connect")
+        import sys
+        sys.print_exception(e)
+        sleep(10)
+        machine.reset()
 
 def mqtt_boot_subscribe(topic, msg):
     print(str(topic))
@@ -87,12 +94,15 @@ def mqtt_boot_subscribe(topic, msg):
         print("An exception occurred during boot")
         import sys
         sys.print_exception(e)
+        sleep(30)
+        machine.reset()
 
 
 def mqtt_subscribe(topic, msg):
     global initconfig
     global mqttc
     global Sensors
+    global IPAddr
     print(str(topic))
     print(msg)
     try:
@@ -134,10 +144,19 @@ def mqtt_subscribe(topic, msg):
             Sensors.send_health_info(mqttc)
         if msgDict["msg"]["action"]=="hello":
             print("hello will be loaded")
-            Sensors.send_health_info(mqttc)
-
+            Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+        if msgDict["msg"]["action"]=="i2cscan":
+            print("I2C Scan started")
+            Sensors.scan_i2c(mqttc)
+        if msgDict["msg"]["action"]=="ssd1306":
+            print("I2C ssd1306 started")
+            Sensors.message_oled(msgDict["msg"]["value"])
+        if msgDict["msg"]["action"]=="test":
+            print("I2C TEST started")
+            Sensors.test_oled(msgDict["msg"]["value"])
+            
     except BaseException as e:
-        print("An exception occurred")
+        print("An exception occurred at subscribe stage")
         import sys
         sys.print_exception(e)
 
@@ -146,53 +165,64 @@ def mqtt_subscribe(topic, msg):
 def do_mqtt_boot_connect(config):
     from umqtt.simple import MQTTClient
     global mqttc
-    # print(config)
-    mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
+    try:
+        # print(config)
+        mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
                        user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
-    registerjs = {}
-    registerjs["id"] = config["board"]["id"]
-    registerjs["flash_id"] = esp.flash_id()
-    registerjs["msg"] = {'action': 'bootstrap'}
-    registerjs["systemtime"] = timeStr(rtc.datetime())
-    # registerjs["machine_id"]=str(machine.unique_id().decode())
-    print(registerjs)
-    #registerjs["capabilities"]= config["board"]["capabilities"]
-    # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
-    mqttc.connect()
-    mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
-    mqttc.set_callback(mqtt_boot_subscribe)
-    mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
+        registerjs = {}
+        registerjs["id"] = config["board"]["id"]
+        registerjs["flash_id"] = esp.flash_id()
+        registerjs["msg"] = {'action': 'bootstrap'}
+        registerjs["systemtime"] = timeStr(rtc.datetime())
+        # registerjs["machine_id"]=str(machine.unique_id().decode())
+        print(registerjs)
+        #registerjs["capabilities"]= config["board"]["capabilities"]
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        mqttc.connect()
+        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        mqttc.set_callback(mqtt_boot_subscribe)
+        mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
-
+    except BaseException as e:
+        print("An exception occurred during do_mqtt_boot_connect")
+        import sys
+        sys.print_exception(e)
 
 def do_mqtt_connect(config):
     from umqtt.simple import MQTTClient
     global mqttc
-    # print(config)
-    mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
+    try:
+        # print(config)
+        mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
                        user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
-    registerjs = {}
-    registerjs["id"] = config["board"]["id"]
-    registerjs["flash_id"] = esp.flash_id()
-    # registerjs["machine_id"]=str(machine.unique_id().decode())
-    print(registerjs)
-    #registerjs["capabilities"]= config["board"]["capabilities"]
-    # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
-    mqttc.connect()
-    mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        registerjs = {}
+        registerjs["id"] = config["board"]["id"]
+        registerjs["flash_id"] = esp.flash_id()
+        # registerjs["machine_id"]=str(machine.unique_id().decode())
+        print(registerjs)
+        #registerjs["capabilities"]= config["board"]["capabilities"]
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        mqttc.connect()
+        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
 
-    #global dhtsensor
-    #dhtsensor = dht.DHT22(machine.Pin(config["board"]["pins"]["dht"]))
+        #global dhtsensor
+        #dhtsensor = dht.DHT22(machine.Pin(config["board"]["pins"]["dht"]))
 
-    mqttc.set_callback(mqtt_subscribe)
-    mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
+        mqttc.set_callback(mqtt_subscribe)
+        mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
-    mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
+        mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
+
+    except BaseException as e:
+        print("An exception occurred during do_mqtt_connect")
+        import sys
+        sys.print_exception(e)
 
 def load_init_file():
     global initconfig
     global mqttc
     global Sensors
+    global IPAddr
     initfile = open('config.json', 'r')
     initconfig = ujson.load(initfile)
     initfile.close()
@@ -207,14 +237,22 @@ def load_init_file():
     print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
     pubtime = time()
     while True:
-        mqttc.check_msg()
-        if (time()-pubtime) >= initconfig["mqtt"]["update"]:
-            Sensors.send_dht_info(mqttc)
-            Sensors.send_health_info(mqttc)
-            # send_dht_info(initconfig)
-            pubtime = time()
-            gc.collect()
-    #    #sleep(0.5)
+        try:
+            mqttc.check_msg()
+            if (time()-pubtime) >= initconfig["mqtt"]["update"]:
+                Sensors.send_dht_info(mqttc)
+                Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+                # send_dht_info(initconfig)
+                pubtime = time()
+                gc.collect()
+        except BaseException as e:
+            print("An exception occurred:rebooting")
+            import sys
+            sys.print_exception(e)
+            sleep(1)
+            machine.reset()
+
+
 
 
 def boot_init():
@@ -236,6 +274,7 @@ def boot_init():
         mqttc.check_msg()
 
     print("Boot is completed")
+
 
 
 def main():

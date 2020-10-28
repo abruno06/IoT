@@ -3,10 +3,11 @@ import dht
 import gc
 import ujson
 import ubinascii
-from mcp230xx import MCP23017
+
 from time import sleep, time
 from machine import RTC, I2C, Pin
 import ubinascii
+import uos
 
 # "board": {
 #       "id": "sydca_esp_001",
@@ -20,11 +21,12 @@ import ubinascii
 #            "mcp23017": "0x20"
 #        },
 
-
+ 
 class sensors:
     dhtsensor = None
     mcpboard = None
     i2cbus = None
+    ssd1306 = None #Oled
     rtc = RTC()
 
     def __init__(self, config):
@@ -51,6 +53,7 @@ class sensors:
                 sys.print_exception(e)
         if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"]):
             try:
+                from mcp230xx import MCP23017
                 if (self.mcpboard is None):
                   print("sensors: MCP Board initializing")
                 self.mcpboard = MCP23017(self.i2cbus, address=int(
@@ -67,13 +70,28 @@ class sensors:
                 print("sensors:An exception occurred during mcp23017 activation")
                 import sys
                 sys.print_exception(e)
-
-     #             "mcp23017":{
+                 #             "mcp23017":{
      #   "pins":{
      #       "input":[0,1,2,3],
      #       "output":[4,5,6,7,8,9,10,11,12,13,14,15]
      #   }
 
+        if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+            try:
+                if (self.ssd1306 is None):
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                    self.ssd1306.fill(0)
+                    self.ssd1306.text(self.config["board"]["id"],0,0)
+                    self.ssd1306.show()
+                    print("sensors: SSD1306 OLED initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during mcp23017 activation")
+                import sys
+                sys.print_exception(e)
+
+    
     def send_mcp_info(self, mqttc):
         try:
             if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
@@ -205,15 +223,68 @@ class sensors:
         return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
     
     
-    def send_health_info(self, mqttc):
+    def send_health_info(self, mqttc,ipaddr,mask):
         try:
-           
-                    message = {"value": "ok"}
+                    os = uos.uname()
+                    print (os)
+                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime())}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], ujson.dumps(message))
-                    print("health ok")
+                    print("health "+self.config["board"]["id"]+" ok")
            
         except BaseException as e:
             print("sensors:An exception occurred during health reading")
             import sys
             sys.print_exception(e)
+
+
+
+    def scan_i2c(self,mqttc):
+        try:
+            print('Scan i2c bus...')
+            devices = self.i2cbus.scan()
+            message = {"connected": True}
+            if len(devices) == 0:
+                print("No i2c device !")
+            else:
+                print('i2c devices found:',len(devices))
+            for device in devices:  
+                print("Decimal address: ",device," | Hexa address: ",hex(device))
+                mqttc.publish(self.config["board"]["i2c"]["topic"]["publish"]+"/" + self.config["board"]
+                                  ["id"]+"/address/"+str(device), ujson.dumps(message))
+        except BaseException as e:
+            print("sensors:An exception occurred during I2C reading")
+            import sys
+            sys.print_exception(e)
+
+    def message_oled(self,value):
+        try:
+            import ssd1306
+            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+            oled.fill(0)
+            idx = 0
+            for line in value["message"]:
+                oled.text(line, 0, idx*8)
+                idx+=1 
+            oled.show()
+            print("oled")
+        except BaseException as e:
+            print("sensors:An exception occurred during oled message")
+            import sys
+            sys.print_exception(e)
+
+    def test_oled(self,value):
+        try:
+            import ssd1306
+            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+            oled.fill(0)
+            idx = 0
+            for line in value["message"]:
+                oled.text(line, 0, idx*8)
+                idx+=1 
+            oled.show()
+            print("oled")
+        except BaseException as e:
+            print("sensors:An exception occurred during oled test")
+            import sys
+            sys.print_exception(e)            
