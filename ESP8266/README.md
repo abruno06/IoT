@@ -8,6 +8,7 @@
     - [Board capabilities](#board-capabilities)
       - [dht](#dht)
       - [ds18b20](#ds18b20)
+      - [ssd1306](#ssd1306)
       - [mcp23017](#mcp23017)
   - [Board Runtime](#board-runtime)
     - [Send commands to the board](#send-commands-to-the-board)
@@ -185,6 +186,34 @@ when query the board return on the result with the following manner
 MQTT topic: **ds18b20.topic.publish**/**config(board.id)**/temperature/**ds18b20.uid** 
 MQTT message:`json object {value: [double]}`
 
+#### ssd1306
+
+This is a small OLED display (ssd1306) you can send messages to it that way. Max line length is **16** characters 
+MQTT topic: **mqtt.topic.subscribe**/**board.id**/# or broadcast topic
+MQTT message:
+```json
+{
+"id":"<Board Id>",
+"msg":
+    {
+        "action":"ssd1306",
+        "value":{
+            "message":[
+                "line 1",
+                "line 2",
+                "line 3",
+                "line 4",
+                "line 5",
+                "line 6",
+                "line 7",
+                "line 8"
+            ]
+        }
+    }
+}
+```
+
+
 #### mcp23017
 
 It currently support only one extension board
@@ -216,37 +245,10 @@ when query the board return on the result with the following manner
     **_topic mcp/sydca_esp_001/input/port_3_**
 
 ```json 
-        {"pin":3,"value":true}
-```
-
-  
-
-#### ssd1306
-
-
-This is a small OLED display you can send messages to it that way. Max line length is **16** characters 
-MQTT topic: **mqtt.topic.subscribe**/**board.id**/# or broadcast topic
-MQTT message:
-```json
-{
-"id":"<Board Id>",
-"msg":
-    {
-        "action":"ssd1306",
-        "value":{
-            "message":[
-                "line 1",
-                "line 2",
-                "line 3",
-                "line 4",
-                "line 5",
-                "line 6",
-                "line 7",
-                "line 8",
-            ]
+        {
+        "pin":3,
+        "value":true
         }
-    }
-}
 ```
 
 
@@ -262,7 +264,7 @@ Syntax is
 "msg":
     {
         "action":"<Action>",
-        "value":"" //optionnal see table below
+        "value":"" //optional see table below
     }
 }
 ```
@@ -297,7 +299,7 @@ it can be implemented in any other MQTT client model
 copy code below as new flow into NodeRed
 
 ``` json
-[{"id":"fa8eae44.385cc","type":"mqtt in","z":"e37dd4b9.277cf8","name":"","topic":"esp_boot","qos":"1","datatype":"json","broker":"750e79f1.0eab9","x":117,"y":178,"wires":[["e1ec36c8.a9a778","5d381774.88516"]]},{"id":"e1ec36c8.a9a778","type":"debug","z":"e37dd4b9.277cf8","name":"esp_boot","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":438,"y":178,"wires":[]},{"id":"860560d3.23b898","type":"inject","z":"e37dd4b9.277cf8","name":"test 132465","topic":"","payload":"{\"id\":\"132465\",\"msg\":{\"action\":\"bootstrap\"}}","payloadType":"json","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":115,"y":311,"wires":[["e897f2ce.01b158"]]},{"id":"8869bb9.91bd8c8","type":"mqtt out","z":"e37dd4b9.277cf8","name":"","topic":"","qos":"0","retain":"false","broker":"750e79f1.0eab9","x":816,"y":331,"wires":[]},{"id":"e897f2ce.01b158","type":"change","z":"e37dd4b9.277cf8","name":"","rules":[{"t":"set","p":"topic","pt":"msg","to":"\"esp_bootconfig/\"&payload.id","tot":"jsonata"}],"action":"","property":"","from":"","to":"","reg":false,"x":329,"y":329,"wires":[["b142de50.4b306"]]},{"id":"f591fad2.145748","type":"change","z":"e37dd4b9.277cf8","name":"","rules":[{"t":"set","p":"payload.msg.value","pt":"msg","to":"$base64encode($string(bootstrap))","tot":"jsonata"}],"action":"","property":"","from":"","to":"","reg":false,"x":538,"y":390,"wires":[["15b3a840.104c7","8869bb9.91bd8c8"]]},{"id":"b142de50.4b306","type":"template","z":"e37dd4b9.277cf8","name":"","field":"bootstrap","fieldType":"msg","format":"json","syntax":"mustache","template":"{\n    \"board\": {\n        \"id\": \"<name of the board after config>\",\n        \"pins\": {\n            \"dls\":5,\n            \"dht\": 14,\n            \"sda\": 13,\n            \"scl\": 12\n        },\n        \"i2c\": {\n            \"mcp23017\": \"0x20\"\n        },\n        \"capabilities\":\n        {\n            \"dht\":true,\n            \"ds18b20\":true,\n            \"mcp23017\":true,\n            \"oled\":false\n        }\n\n    },\n    \"wifi\": {\n        \"ssid\": \"<wifi ssid>\",\n        \"password\": \"<wifi pwd>\"\n    },\n    \"mqtt\": {\n        \"server\": \"mqtt borker ip\",\n        \"topic\": {\n            \"publish\": \"dht\",\n            \"subscribe\": \"sydca_esp\",\n            \"register\":\"sensors\",\n            \"unregister\":\"disconnect\"\n        },\n        \"user\": \"<mqtt user>\",\n        \"password\": \"<mqtt pwd>\",\n        \"update\":60\n    },\n    \"mcp23017\":{\n        \"pins\":{\n            \"input\":[0,1,2,3,4],\n            \"input_name\":[\"port_0\",\"port_1\",\"port_2\",\"port_3\",\"port_4\"],\n            \"output\":[5,6,7,8,9,10,11,12,13,14,15]\n            \n        },\n         \"topic\": {\n            \"publish\": \"mcp\"\n         }\n    },\n    \"ds18b20\":{\n         \"topic\": {\n            \"publish\": \"ds18b20\"\n         }\n    }\n    \n}","output":"json","x":321,"y":389,"wires":[["f591fad2.145748"]]},{"id":"15b3a840.104c7","type":"debug","z":"e37dd4b9.277cf8","name":"config","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":815,"y":389,"wires":[]},{"id":"3c64f31d.726fb4","type":"switch","z":"e37dd4b9.277cf8","name":"","property":"payload.id","propertyType":"msg","rules":[{"t":"eq","v":"123456","vt":"str"},{"t":"eq","v":"123789","vt":"str"},{"t":"else"}],"checkall":"true","repair":false,"outputs":3,"x":276,"y":258,"wires":[["e897f2ce.01b158"],["e897f2ce.01b158"],["744c29d.c2a3058"]]},{"id":"744c29d.c2a3058","type":"debug","z":"e37dd4b9.277cf8","name":"esp_boot_error","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":487,"y":274,"wires":[]},{"id":"5d381774.88516","type":"delay","z":"e37dd4b9.277cf8","name":"","pauseType":"delay","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"1","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"x":136,"y":256,"wires":[["3c64f31d.726fb4"]]},{"id":"3a2276a.5163c8a","type":"inject","z":"e37dd4b9.277cf8","name":"test 132798","topic":"","payload":"{\"id\":\"132798\",\"msg\":{\"action\":\"bootstrap\"}}","payloadType":"json","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":119,"y":360,"wires":[["e897f2ce.01b158"]]},{"id":"750e79f1.0eab9","type":"mqtt-broker","z":"","name":"MyMQTTBroker","broker":"10.10.10.10","port":"1883","clientid":"","usetls":false,"compatmode":false,"keepalive":"60","cleansession":true,"birthTopic":"","birthQos":"0","birthPayload":"","closeTopic":"","closeQos":"0","closePayload":"","willTopic":"","willQos":"0","willPayload":""}]
+[{"id":"fa8eae44.385cc","type":"mqtt in","z":"e37dd4b9.277cf8","name":"","topic":"esp_boot","qos":"1","datatype":"json","broker":"750e79f1.0eab9","x":117,"y":178,"wires":[["e1ec36c8.a9a778","5d381774.88516"]]},{"id":"e1ec36c8.a9a778","type":"debug","z":"e37dd4b9.277cf8","name":"esp_boot","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":438,"y":178,"wires":[]},{"id":"860560d3.23b898","type":"inject","z":"e37dd4b9.277cf8","name":"test 132465","topic":"","payload":"{\"id\":\"132465\",\"msg\":{\"action\":\"bootstrap\"}}","payloadType":"json","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":115,"y":311,"wires":[["e897f2ce.01b158"]]},{"id":"8869bb9.91bd8c8","type":"mqtt out","z":"e37dd4b9.277cf8","name":"","topic":"","qos":"0","retain":"false","broker":"750e79f1.0eab9","x":816,"y":331,"wires":[]},{"id":"e897f2ce.01b158","type":"change","z":"e37dd4b9.277cf8","name":"","rules":[{"t":"set","p":"topic","pt":"msg","to":"\"esp_bootconfig/\"&payload.id","tot":"jsonata"}],"action":"","property":"","from":"","to":"","reg":false,"x":329,"y":329,"wires":[["b142de50.4b306"]]},{"id":"f591fad2.145748","type":"change","z":"e37dd4b9.277cf8","name":"","rules":[{"t":"set","p":"payload.msg.value","pt":"msg","to":"$base64encode($string(bootstrap))","tot":"jsonata"}],"action":"","property":"","from":"","to":"","reg":false,"x":538,"y":390,"wires":[["15b3a840.104c7","8869bb9.91bd8c8"]]},{"id":"b142de50.4b306","type":"template","z":"e37dd4b9.277cf8","name":"","field":"bootstrap","fieldType":"msg","format":"json","syntax":"mustache","template":"{\n    \"board\": {\n        \"id\": \"<name of the board after config>\",\n        \"pins\": {\n            \"dls\":5,\n            \"dht\": 14,\n            \"sda\": 13,\n            \"scl\": 12\n        },\n        \"i2c\": {\n            \"mcp23017\": \"0x20\"\n        },\n        \"capabilities\":\n        {\n            \"dht\":true,\n            \"ds18b20\":true,\n            \"mcp23017\":true,\n            \"oled\":false\n        }\n\n    },\n    \"wifi\": {\n        \"ssid\": \"<wifi ssid>\",\n        \"password\": \"<wifi pwd>\"\n    },\n    \"mqtt\": {\n        \"server\": \"mqtt broker ip\",\n        \"topic\": {\n            \"publish\": \"dht\",\n            \"subscribe\": \"sydca_esp\",\n            \"register\":\"sensors\",\n            \"unregister\":\"disconnect\"\n        },\n        \"user\": \"<mqtt user>\",\n        \"password\": \"<mqtt pwd>\",\n        \"update\":60\n    },\n    \"mcp23017\":{\n        \"pins\":{\n            \"input\":[0,1,2,3,4],\n            \"input_name\":[\"port_0\",\"port_1\",\"port_2\",\"port_3\",\"port_4\"],\n            \"output\":[5,6,7,8,9,10,11,12,13,14,15]\n            \n        },\n         \"topic\": {\n            \"publish\": \"mcp\"\n         }\n    },\n    \"ds18b20\":{\n         \"topic\": {\n            \"publish\": \"ds18b20\"\n         }\n    }\n    \n}","output":"json","x":321,"y":389,"wires":[["f591fad2.145748"]]},{"id":"15b3a840.104c7","type":"debug","z":"e37dd4b9.277cf8","name":"config","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":815,"y":389,"wires":[]},{"id":"3c64f31d.726fb4","type":"switch","z":"e37dd4b9.277cf8","name":"","property":"payload.id","propertyType":"msg","rules":[{"t":"eq","v":"123456","vt":"str"},{"t":"eq","v":"123789","vt":"str"},{"t":"else"}],"checkall":"true","repair":false,"outputs":3,"x":276,"y":258,"wires":[["e897f2ce.01b158"],["e897f2ce.01b158"],["744c29d.c2a3058"]]},{"id":"744c29d.c2a3058","type":"debug","z":"e37dd4b9.277cf8","name":"esp_boot_error","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":487,"y":274,"wires":[]},{"id":"5d381774.88516","type":"delay","z":"e37dd4b9.277cf8","name":"","pauseType":"delay","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"1","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"x":136,"y":256,"wires":[["3c64f31d.726fb4"]]},{"id":"3a2276a.5163c8a","type":"inject","z":"e37dd4b9.277cf8","name":"test 132798","topic":"","payload":"{\"id\":\"132798\",\"msg\":{\"action\":\"bootstrap\"}}","payloadType":"json","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":119,"y":360,"wires":[["e897f2ce.01b158"]]},{"id":"750e79f1.0eab9","type":"mqtt-broker","z":"","name":"MyMQTTBroker","broker":"10.10.10.10","port":"1883","clientid":"","usetls":false,"compatmode":false,"keepalive":"60","cleansession":true,"birthTopic":"","birthQos":"0","birthPayload":"","closeTopic":"","closeQos":"0","closePayload":"","willTopic":"","willQos":"0","willPayload":""}]
 ```
 
 
