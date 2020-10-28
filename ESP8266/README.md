@@ -144,7 +144,7 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 ```
 
 The board will listen configuration on the following topic
- **"mqtt"."topic"."subscribe**/**"board"."id"**/#
+ **mqtt.topic.subscribe**/**board.id**/#
 
 ### Board capabilities
 
@@ -209,18 +209,22 @@ when query the board return on the result with the following manner
     ```
 
 - **requested action: "mcp_topic"**
+
     MQTT topic: **mcp23017.topic.publish**/**config(board.id)**/input/**mcp23017.pins.input_name[i]**
 
     *example:*
     **_topic mcp/sydca_esp_001/input/port_3_**
 
-    ```json 
+```json 
         {"pin":3,"value":true}
-    ```
+```
+
+
 
 #### ssd1306
 
-This is a small OLED display you can send messages to it that way. Max line length is 16 characters 
+
+This is a small OLED display you can send messages to it that way. Max line length is **16** characters 
 MQTT topic: **"mqtt"."topic"."subscribe**/**"board"."id"**/# or broadcast topic
 MQTT message:
 ```json
