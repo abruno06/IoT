@@ -84,6 +84,7 @@ def mqtt_boot_subscribe(topic, msg):
             config = ujson.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
             save_init_file(config)
+            update_boot_wifi()
             # load_init_file()
             waitConfig = False
         if msgDict["msg"]["action"] == "id":
@@ -274,6 +275,28 @@ def boot_init():
         mqttc.check_msg()
 
     print("Boot is completed")
+
+def update_boot_wifi():
+    initfile = open('boot.json', 'r')
+    bootconfig = ujson.load(initfile)
+    initfile.close()
+
+    configfile = open('config.json', 'r')
+    config = ujson.load(configfile)
+    configfile.close()
+    
+    #"wifi": {
+    #    "ssid": "sydca",
+    #    "password": "sydCA_Local_N_psk" 
+    #},
+
+    bootconfig["wifi"]=config["wifi"]
+
+    initfile = open('boot.json', 'w')
+    ujson.dump(bootconfig, initfile)
+    initfile.close()
+
+    print("Boot Wifi is updated")
 
 
 
