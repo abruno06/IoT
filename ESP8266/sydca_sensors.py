@@ -259,15 +259,18 @@ class sensors:
 
     def message_oled(self,value):
         try:
-            import ssd1306
-            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
-            oled.fill(0)
-            idx = 0
-            for line in value["message"]:
-                oled.text(line, 0, idx*8)
-                idx+=1 
-            oled.show()
-            print("oled")
+            if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+                import ssd1306
+                oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                oled.fill(0)
+                idx = 0
+                for line in value["message"]:
+                    oled.text(line, 0, idx*8)
+                    idx+=1 
+                oled.show()
+                print("oled")
+            else:
+                print("sensors: oled screen not activated") 
         except BaseException as e:
             print("sensors:An exception occurred during oled message")
             import sys
