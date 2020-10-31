@@ -83,7 +83,7 @@ class sensors:
                     import ssd1306
                     self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
                     self.ssd1306.fill(0)
-                    self.ssd1306.text(self.config["board"]["id"],0,0)
+                    self.ssd1306.text(self.config["board"]["id"],0,18)
                     self.ssd1306.show()
                     print("sensors: SSD1306 OLED initialized")
             except BaseException as e:
@@ -260,7 +260,7 @@ class sensors:
     def message_oled(self,value):
         try:
             import ssd1306
-            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
             oled.fill(0)
             idx = 0
             for line in value["message"]:
