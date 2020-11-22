@@ -1,10 +1,10 @@
 import machine
-import dht
 import gc
 import ujson
 import ubinascii
 
-from time import sleep, time
+#from time import sleep, time
+import time
 from machine import RTC, I2C, Pin
 import ubinascii
 import uos
@@ -27,13 +27,16 @@ class sensors:
     mcpboard = None
     i2cbus = None
     ssd1306 = None #Oled
+    bme280 = None
     rtc = RTC()
 
     def __init__(self, config):
         self.config = config
         if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
             try:
+               
                 if self.dhtsensor is None:
+                    import dht
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(
                      self.config["board"]["pins"]["dht"]))
@@ -90,6 +93,29 @@ class sensors:
                 print("sensors:An exception occurred during mcp23017 activation")
                 import sys
                 sys.print_exception(e)
+
+
+        if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+            try:
+                if (self.bme280 is None):
+                    print("sensors: bme280 initializing")
+                    import bme280_i2c
+                    self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                    self.bme280.set_measurement_settings(
+                    {
+                        'filter': bme280_i2c.BME280_FILTER_COEFF_16,
+                        'standby_time': bme280_i2c.BME280_STANDBY_TIME_500_US,
+                        'osr_h': bme280_i2c.BME280_OVERSAMPLING_1X,
+                        'osr_p': bme280_i2c.BME280_OVERSAMPLING_16X,
+                        'osr_t': bme280_i2c.BME280_OVERSAMPLING_2X})
+                    self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+                    time.sleep_ms(70)
+                    print(self.bme280.get_measurement())
+                    print("sensors: bme280 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during bme280 activation")
+                import sys
+                sys.print_exception(e)        
 
     
     def send_mcp_info(self, mqttc):
@@ -165,10 +191,11 @@ class sensors:
         try:
             if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
                 if self.dhtsensor is None:
+                    import dht
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(
                         self.config["board"]["pins"]["dht"]))
-                    sleep(5)
+                    time.sleep(5)
                 self.dhtsensor.measure()
                 print(self.PrintTime(self.rtc.datetime()))
                 print(self.dhtsensor.temperature())  # eg. 23.6 (°C)
@@ -188,6 +215,54 @@ class sensors:
             import sys
             sys.print_exception(e)
 
+    def send_bme280_info(self, mqttc):
+        try:
+            if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+                if self.bme280 is None:
+                    if (self.bme280 is None):
+                        print("sensors: bme280 initializing")
+                    import bme280_i2c
+                    self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                    self.bme280.set_measurement_settings(
+                    {
+                        'filter': bme280_i2c.BME280_FILTER_COEFF_16,
+                        'standby_time': bme280_i2c.BME280_STANDBY_TIME_500_US,
+                        'osr_h': bme280_i2c.BME280_OVERSAMPLING_1X,
+                        'osr_p': bme280_i2c.BME280_OVERSAMPLING_16X,
+                        'osr_t': bme280_i2c.BME280_OVERSAMPLING_2X})
+                    self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+                    time.sleep_ms(70)
+                    print(self.bme280.get_measurement())
+                    print("sensors: bme280 initialized")
+                    time.sleep(5)
+                import bme280_i2c
+              #  self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+             #   time.sleep_ms(70)
+                results = self.bme280.get_measurement()
+                print(self.bme280.get_measurement_settings())
+            #    self.bme280.set_power_mode(bme280_i2c.BME280_SLEEP_MODE)
+                print(self.PrintTime(self.rtc.datetime()))
+                print(results)
+            
+                mpejst = {}
+                mpejsh = {}
+                mpejsp = {}
+                mpejst["value"] = results["temperature"]
+                mpejsp["value"] = results["pressure"]
+                mpejsh["value"] = results["humidity"]
+             
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/temperature", ujson.dumps(mpejst))
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/humidity", ujson.dumps(mpejsh))
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/pressure", ujson.dumps(mpejsp))
+            else:
+                print("bme280 is not activate")
+        except BaseException as e:
+            print("sensors:An exception occurred during bme280 reading")
+            import sys
+            sys.print_exception(e)
 
     def send_ds18b20_info(self, mqttc):
         try:
@@ -199,7 +274,7 @@ class sensors:
                 ds = ds18x20.DS18X20(ow)
                 roms = ds.scan()
                 ds.convert_temp()
-                sleep(1) 
+                time.sleep(1) 
                 message = {}
                 for rom in roms:
                     probeId = ubinascii.hexlify(rom).decode();

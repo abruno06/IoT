@@ -5,7 +5,6 @@ import ure
 import esp
 import network
 import machine
-import dht
 import ubinascii
 import ujson
 import gc
@@ -116,6 +115,9 @@ def mqtt_subscribe(topic, msg):
             print("DHT")
             # send_dht_info(initconfig)
             Sensors.send_dht_info(mqttc)
+        if msgDict["msg"]["action"] == "bme280":
+            print("bme280")
+            Sensors.send_bme280_info(mqttc)
         if msgDict["msg"]["action"] == "id":
             print("ID")
             initconfig["board"]["name"] = msgDict["msg"]["value"]
@@ -242,6 +244,7 @@ def load_init_file():
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
                 Sensors.send_dht_info(mqttc)
+                Sensors.send_bme280_info(mqttc)                
                 Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
                 # send_dht_info(initconfig)
                 pubtime = time()
