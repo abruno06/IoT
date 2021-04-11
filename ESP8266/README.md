@@ -5,11 +5,20 @@
   - [Board behaviors](#board-behaviors)
     - [Boot Sequence](#boot-sequence)
   - [config.json template](#configjson-template)
+  - [MQQT detail](#mqqt-detail)
+    - [Boot Time](#boot-time)
     - [Board capabilities](#board-capabilities)
       - [dht](#dht)
       - [ds18b20](#ds18b20)
       - [ssd1306](#ssd1306)
       - [mcp23017](#mcp23017)
+      - [bme280](#bme280)
+        - [Configuration option from code](#configuration-option-from-code)
+          - [Sensor Power Mode Options](#sensor-power-mode-options)
+          - [Oversampling Options](#oversampling-options)
+          - [Standby Duration Options](#standby-duration-options)
+          - [Filter Coefficient Options](#filter-coefficient-options)
+        - [sample](#sample)
   - [Board Runtime](#board-runtime)
     - [Send commands to the board](#send-commands-to-the-board)
   - [Boot Manager using Node-Red](#boot-manager-using-node-red)
@@ -81,14 +90,19 @@ The Board will use the following sequence in order to get its complete configura
             "scl": 12  // i2C SCL Pin on the board
         },
         "i2c": {
-            "mcp23017": "0x20" //mcp23017 i2c address
+            "mcp23017": "0x20", //mcp23017 i2c address
+            "ssd1306" : "0x30", //ssd1306 i2c address
+            "bme280":"0x76",//bme280 i2c address
+            "topic": {
+            "publish": "i2c" // topic where i2c information get published
         },
         "capabilities":
         {
             "dht":true,
             "ds18b20":false,
             "mcp23017":true,
-            "ssd1306":false
+            "ssd1306":false,
+            "bme280":false
         },
         "system":
         {
@@ -130,6 +144,11 @@ The Board will use the following sequence in order to get its complete configura
          "topic": {
             "publish": "ds18b20" //MQTT root topic for ds18b20 /<ds18b20.topic.publish>/<board.id>/temperature/<ds18d20 uid>
          }
+    },
+     "bme280":{
+         "topic": {
+            "publish": "bme280" //MQTT root topic for bme280 /<bme280.topic.publish>/<board.id>/temperature|humidity|pressure/
+         }
     }
         
 
@@ -144,11 +163,26 @@ The configuration can be generated using Node-Red as MQTT Bootmanager component 
 
 ```
 
+## MQQT detail
+
+### Boot Time
+
+The board send a boot message to topic 
+
+**mqqt.topic.register**/
+
 The board will listen configuration on the following topic
+
  **mqtt.topic.subscribe**/**board.id**/#
+
+The board.id is the value from built-in information see below how retrieve it.
 
 ### Board capabilities
 
+During runtime after the configuration get loaded the board will listen on following topics. At this stage the board.id is the one from the configuration rather than the original board.id used at the boot stage
+
+**mqtt.topic.subscribe**/**board.id**/#
+**mqtt.topic.broadcast**/#
 
 As of today the board support the three extensions below (see Runtime section for more detail about sending action)
 
@@ -159,7 +193,8 @@ As of today the board support the three extensions below (see Runtime section fo
             "dht":true,
             "ds18b20":false,
             "mcp23017":true,
-            "ssd1306":true
+            "ssd1306":true,
+            "bme280":true
         }
 
 ```
@@ -252,6 +287,89 @@ when query the board return on the result with the following manner
 ```
 
 
+#### bme280 
+
+
+bmp280 will come in later release
+
+This is the bme280 that have been implemented on the board 
+
+when query the board return on the result with the following manner
+
+MQTT topic: **bme280.topic.publish**/**config(board.id)**/temperature/
+MQTT message:`json object {value: [double]}`
+
+MQTT topic: **bme280.topic.publish**/**config(board.id)**/humidity/
+MQTT message:`json object {value: [double]}`
+
+MQTT topic: **bme280.topic.publish**/**config(board.id)**/pressure/
+MQTT message:`json object {value: [double]}`
+
+##### Configuration option from code
+
+
+to be implemented
+###### Sensor Power Mode Options
+
+
+BME280_SLEEP_MODE                     = const(0x00)
+BME280_FORCED_MODE                    = const(0x01)
+BME280_NORMAL_MODE                    = const(0x03)
+
+###### Oversampling Options
+
+
+BME280_NO_OVERSAMPLING                = const(0x00)
+BME280_OVERSAMPLING_1X                = const(0x01)
+BME280_OVERSAMPLING_2X                = const(0x02)
+BME280_OVERSAMPLING_4X                = const(0x03)
+BME280_OVERSAMPLING_8X                = const(0x04)
+BME280_OVERSAMPLING_16X               = const(0x05)
+
+###### Standby Duration Options
+
+
+BME280_STANDBY_TIME_500_US            = const(0x00)  # Note this is microseconds, so 0.5 ms
+BME280_STANDBY_TIME_62_5_MS           = const(0x01)
+BME280_STANDBY_TIME_125_MS            = const(0x02)
+BME280_STANDBY_TIME_250_MS            = const(0x03)
+BME280_STANDBY_TIME_500_MS            = const(0x04)
+BME280_STANDBY_TIME_1000_MS           = const(0x05)
+BME280_STANDBY_TIME_10_MS             = const(0x06)
+BME280_STANDBY_TIME_20_MS             = const(0x07)
+
+###### Filter Coefficient Options
+
+
+BME280_FILTER_COEFF_OFF               = const(0x00)
+BME280_FILTER_COEFF_2                 = const(0x01)
+BME280_FILTER_COEFF_4                 = const(0x02)
+BME280_FILTER_COEFF_8                 = const(0x03)
+BME280_FILTER_COEFF_16                = const(0x04)
+
+##### sample
+
+```json
+"bme280":{
+    "topic":{
+        "publish":"bme280"
+    },
+    "options":{
+        "mode":"0x3",
+        "standby":"0x00",
+        "filter":"0x04",
+        "oversampling":
+        {
+            "temperature":"0x01",
+            "humidity":"0x02",
+            "pressure":"0x05"
+        }
+    }
+}
+
+
+```
+
 ## Board Runtime
 
 ### Send commands to the board
@@ -321,6 +439,10 @@ https://micropython.org/resources/firmware/esp8266-20191220-v1.12.bin
 Tested with v1.13
 https://micropython.org/resources/firmware/esp8266-20200911-v1.13.bin
 
+Tested with v1.14
+https://micropython.org/resources/firmware/esp8266-20210202-v1.14.bin
+
+
 
 ## Connect to your computer
 
@@ -330,6 +452,8 @@ esptool.py --port /dev/ttyUSB0 erase_flash
 then 
 ``` code
 esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20200911-v1.13.bin
+
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20210202-v1.14.bin
 ``` 
 
 once done reset your board FS using
@@ -350,10 +474,15 @@ keep it to be used later in your bootmanager
 
 Now Load application files
 
+To diag
+``` python
+import port_diag
+``` 
 
 # Work in Progress
 
 Add the ADS1x15 extension board
+Add the 6750 uv reader extension board
 
 # References
 
@@ -361,4 +490,10 @@ Add the ADS1x15 extension board
 * https://github.com/ShrimpingIt/micropython-mcp230xx/blob/master/mcp.py
 * https://github.com/micropython/micropython/blob/master/drivers/display/ssd1306.py
 * http://docs.micropython.org/en/latest/esp8266/general.html
+* https://github.com/catdog2/mpy_bme280_esp8266/blob/master/bme280.py
+* https://github.com/triplepoint/micropython_bme280_i2c/blob/master/bme280_i2c.py
+* https://github.com/adafruit/Adafruit_CircuitPython_VEML6070/blob/master/adafruit_veml6070.py
+* https://www.vishay.com/docs/84310/designingveml6070.pdf
+* https://www.vishay.com/docs/84277/veml6070.pdf
+* 
 * ...

@@ -1,10 +1,10 @@
 import machine
-import dht
 import gc
 import ujson
 import ubinascii
 
-from time import sleep, time
+#from time import sleep, time
+import time
 from machine import RTC, I2C, Pin
 import ubinascii
 import uos
@@ -27,13 +27,17 @@ class sensors:
     mcpboard = None
     i2cbus = None
     ssd1306 = None #Oled
+    bme280 = None
+    veml6070 = None #UV Sensor
     rtc = RTC()
 
     def __init__(self, config):
         self.config = config
         if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
             try:
+               
                 if self.dhtsensor is None:
+                    import dht
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(
                      self.config["board"]["pins"]["dht"]))
@@ -83,13 +87,47 @@ class sensors:
                     import ssd1306
                     self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
                     self.ssd1306.fill(0)
-                    self.ssd1306.text(self.config["board"]["id"],0,0)
+                    self.ssd1306.text(self.config["board"]["id"],0,18)
                     self.ssd1306.show()
                     print("sensors: SSD1306 OLED initialized")
             except BaseException as e:
                 print("sensors:An exception occurred during mcp23017 activation")
                 import sys
                 sys.print_exception(e)
+
+
+        if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+            try:
+                if (self.bme280 is None):
+                    print("sensors: bme280 initializing")
+                    import bme280_i2c
+                    self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                    self.bme280.set_measurement_settings(
+                    {
+                        'filter': bme280_i2c.BME280_FILTER_COEFF_16,
+                        'standby_time': bme280_i2c.BME280_STANDBY_TIME_500_US,
+                        'osr_h': bme280_i2c.BME280_OVERSAMPLING_1X,
+                        'osr_p': bme280_i2c.BME280_OVERSAMPLING_16X,
+                        'osr_t': bme280_i2c.BME280_OVERSAMPLING_2X})
+                    self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+                    time.sleep_ms(70)
+                    print(self.bme280.get_measurement())
+                    print("sensors: bme280 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during bme280 activation")
+                import sys
+                sys.print_exception(e)        
+        if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+            try:
+                if (self.veml6070 is None):
+                     print("sensors: veml6070 initializing")
+                     import veml6070_i2c
+                     self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
+                     print("sensors: veml6070 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during veml6070 activation")
+                import sys
+                sys.print_exception(e)        
 
     
     def send_mcp_info(self, mqttc):
@@ -165,10 +203,11 @@ class sensors:
         try:
             if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
                 if self.dhtsensor is None:
+                    import dht
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(
                         self.config["board"]["pins"]["dht"]))
-                    sleep(5)
+                    time.sleep(5)
                 self.dhtsensor.measure()
                 print(self.PrintTime(self.rtc.datetime()))
                 print(self.dhtsensor.temperature())  # eg. 23.6 (°C)
@@ -182,12 +221,60 @@ class sensors:
                 mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/" +
                               self.config["board"]["id"]+"/humidity", ujson.dumps(dhtjsh))
             else:
-                print("dht is not activate")
+                print("dht is not activated")
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
             sys.print_exception(e)
 
+    def send_bme280_info(self, mqttc):
+        try:
+            if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+                if self.bme280 is None:
+                    if (self.bme280 is None):
+                        print("sensors: bme280 initializing")
+                    import bme280_i2c
+                    self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                    self.bme280.set_measurement_settings(
+                    {
+                        'filter': bme280_i2c.BME280_FILTER_COEFF_16,
+                        'standby_time': bme280_i2c.BME280_STANDBY_TIME_500_US,
+                        'osr_h': bme280_i2c.BME280_OVERSAMPLING_1X,
+                        'osr_p': bme280_i2c.BME280_OVERSAMPLING_16X,
+                        'osr_t': bme280_i2c.BME280_OVERSAMPLING_2X})
+                    self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+                    time.sleep_ms(70)
+                    print(self.bme280.get_measurement())
+                    print("sensors: bme280 initialized")
+                    time.sleep(5)
+                import bme280_i2c
+              #  self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+             #   time.sleep_ms(70)
+                results = self.bme280.get_measurement()
+                print(self.bme280.get_measurement_settings())
+            #    self.bme280.set_power_mode(bme280_i2c.BME280_SLEEP_MODE)
+                print(self.PrintTime(self.rtc.datetime()))
+                print(results)
+            
+                mpejst = {}
+                mpejsh = {}
+                mpejsp = {}
+                mpejst["value"] = results["temperature"]
+                mpejsp["value"] = results["pressure"]
+                mpejsh["value"] = results["humidity"]
+             
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/temperature", ujson.dumps(mpejst))
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/humidity", ujson.dumps(mpejsh))
+                mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/pressure", ujson.dumps(mpejsp))
+            else:
+                print("bme280 is not activated")
+        except BaseException as e:
+            print("sensors:An exception occurred during bme280 reading")
+            import sys
+            sys.print_exception(e)
 
     def send_ds18b20_info(self, mqttc):
         try:
@@ -199,7 +286,7 @@ class sensors:
                 ds = ds18x20.DS18X20(ow)
                 roms = ds.scan()
                 ds.convert_temp()
-                sleep(1) 
+                time.sleep(1) 
                 message = {}
                 for rom in roms:
                     probeId = ubinascii.hexlify(rom).decode();
@@ -208,11 +295,47 @@ class sensors:
                                   ["id"]+"/temperature/"+probeId, ujson.dumps(message))
                     print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
             else:
-                print("ds18b20 is not activate")     
+                print("ds18b20 is not activated")     
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
             sys.print_exception(e)
+
+    def send_veml6070_info(self, mqttc):
+        try:
+            if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+                if self.veml6070 is None:
+                     print("sensors: veml6070 initializing")
+                     import veml6070_i2c
+                     self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
+                     print("sensors: veml6070 initialized")
+                     time.sleep(5)
+               
+                import veml6070_i2c
+                results = self.veml6070.uv_raw
+                print(self.veml6070.get_index(results))
+                print(results)
+                print(self.PrintTime(self.rtc.datetime()))
+            
+                mpejsu = {}
+                mpejsi = {}
+                mpejsu["value"] = results
+                mpejsi["value"] = self.veml6070.get_index(results)
+        
+             
+                mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/uv", ujson.dumps(mpejsu))
+                mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/uv_index", ujson.dumps(mpejsi))
+              
+            else:
+                print("veml6070_i2c is not activated")
+        except BaseException as e:
+            print("sensors:An exception occurred during veml6070 reading")
+            import sys
+            sys.print_exception(e)
+
+
 
     def PrintTime(self, rtcT):
         M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
@@ -259,15 +382,18 @@ class sensors:
 
     def message_oled(self,value):
         try:
-            import ssd1306
-            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
-            oled.fill(0)
-            idx = 0
-            for line in value["message"]:
-                oled.text(line, 0, idx*8)
-                idx+=1 
-            oled.show()
-            print("oled")
+            if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+                import ssd1306
+                oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                oled.fill(0)
+                idx = 0
+                for line in value["message"]:
+                    oled.text(line, 0, idx*8)
+                    idx+=1 
+                oled.show()
+                print("oled")
+            else:
+                print("sensors: oled screen not activated") 
         except BaseException as e:
             print("sensors:An exception occurred during oled message")
             import sys

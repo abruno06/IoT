@@ -5,7 +5,6 @@ import ure
 import esp
 import network
 import machine
-import dht
 import ubinascii
 import ujson
 import gc
@@ -84,6 +83,7 @@ def mqtt_boot_subscribe(topic, msg):
             config = ujson.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
             save_init_file(config)
+            update_boot_wifi()
             # load_init_file()
             waitConfig = False
         if msgDict["msg"]["action"] == "id":
@@ -115,6 +115,9 @@ def mqtt_subscribe(topic, msg):
             print("DHT")
             # send_dht_info(initconfig)
             Sensors.send_dht_info(mqttc)
+        if msgDict["msg"]["action"] == "bme280":
+            print("bme280")
+            Sensors.send_bme280_info(mqttc)
         if msgDict["msg"]["action"] == "id":
             print("ID")
             initconfig["board"]["name"] = msgDict["msg"]["value"]
@@ -154,6 +157,9 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"]=="test":
             print("I2C TEST started")
             Sensors.test_oled(msgDict["msg"]["value"])
+        if msgDict["msg"]["action"] == "veml6070":
+            print("veml6070 read")
+            Sensors.send_veml6070_info(mqttc)
             
     except BaseException as e:
         print("An exception occurred at subscribe stage")
@@ -241,6 +247,8 @@ def load_init_file():
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
                 Sensors.send_dht_info(mqttc)
+                Sensors.send_bme280_info(mqttc)                
+                Sensors.send_veml6070_info(mqttc)
                 Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
                 # send_dht_info(initconfig)
                 pubtime = time()
@@ -275,10 +283,32 @@ def boot_init():
 
     print("Boot is completed")
 
+def update_boot_wifi():
+    initfile = open('boot.json', 'r')
+    bootconfig = ujson.load(initfile)
+    initfile.close()
+
+    configfile = open('config.json', 'r')
+    config = ujson.load(configfile)
+    configfile.close()
+    
+    #"wifi": {
+    #    "ssid": "sydca",
+    #    "password": "sydCA_Local_N_psk" 
+    #},
+
+    bootconfig["wifi"]=config["wifi"]
+
+    initfile = open('boot.json', 'w')
+    ujson.dump(bootconfig, initfile)
+    initfile.close()
+
+    print("Boot Wifi is updated")
+
 
 
 def main():
-    print("Hello Welcome to SYDCA ESP APP")
+    print("Hello Welcome to SYDCA ESP OS")
 
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
