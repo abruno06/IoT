@@ -28,6 +28,7 @@ class sensors:
     i2cbus = None
     ssd1306 = None #Oled
     bme280 = None
+    veml6070 = None #UV Sensor
     rtc = RTC()
 
     def __init__(self, config):
@@ -114,6 +115,17 @@ class sensors:
                     print("sensors: bme280 initialized")
             except BaseException as e:
                 print("sensors:An exception occurred during bme280 activation")
+                import sys
+                sys.print_exception(e)        
+        if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+            try:
+                if (self.veml6070 is None):
+                     print("sensors: veml6070 initializing")
+                     import veml6070_i2c
+                     self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
+                     print("sensors: veml6070 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during veml6070 activation")
                 import sys
                 sys.print_exception(e)        
 
@@ -209,7 +221,7 @@ class sensors:
                 mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/" +
                               self.config["board"]["id"]+"/humidity", ujson.dumps(dhtjsh))
             else:
-                print("dht is not activate")
+                print("dht is not activated")
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
@@ -258,7 +270,7 @@ class sensors:
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
                                self.config["board"]["id"]+"/pressure", ujson.dumps(mpejsp))
             else:
-                print("bme280 is not activate")
+                print("bme280 is not activated")
         except BaseException as e:
             print("sensors:An exception occurred during bme280 reading")
             import sys
@@ -283,11 +295,47 @@ class sensors:
                                   ["id"]+"/temperature/"+probeId, ujson.dumps(message))
                     print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
             else:
-                print("ds18b20 is not activate")     
+                print("ds18b20 is not activated")     
         except BaseException as e:
             print("sensors:An exception occurred during dht reading")
             import sys
             sys.print_exception(e)
+
+    def send_veml6070_info(self, mqttc):
+        try:
+            if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+                if self.veml6070 is None:
+                     print("sensors: veml6070 initializing")
+                     import veml6070_i2c
+                     self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
+                     print("sensors: veml6070 initialized")
+                     time.sleep(5)
+               
+                import veml6070_i2c
+                results = self.veml6070.uv_raw
+                print(self.veml6070.get_index(results))
+                print(results)
+                print(self.PrintTime(self.rtc.datetime()))
+            
+                mpejsu = {}
+                mpejsi = {}
+                mpejsu["value"] = results
+                mpejsi["value"] = self.veml6070.get_index(results)
+        
+             
+                mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/uv", ujson.dumps(mpejsu))
+                mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
+                               self.config["board"]["id"]+"/uv_index", ujson.dumps(mpejsi))
+              
+            else:
+                print("veml6070_i2c is not activated")
+        except BaseException as e:
+            print("sensors:An exception occurred during veml6070 reading")
+            import sys
+            sys.print_exception(e)
+
+
 
     def PrintTime(self, rtcT):
         M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])

@@ -439,6 +439,10 @@ https://micropython.org/resources/firmware/esp8266-20191220-v1.12.bin
 Tested with v1.13
 https://micropython.org/resources/firmware/esp8266-20200911-v1.13.bin
 
+Tested with v1.14
+https://micropython.org/resources/firmware/esp8266-20210202-v1.14.bin
+
+
 
 ## Connect to your computer
 
@@ -448,6 +452,8 @@ esptool.py --port /dev/ttyUSB0 erase_flash
 then 
 ``` code
 esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20200911-v1.13.bin
+
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect -fm dio  0 esp8266-20210202-v1.14.bin
 ``` 
 
 once done reset your board FS using
@@ -468,10 +474,15 @@ keep it to be used later in your bootmanager
 
 Now Load application files
 
+To diag
+``` python
+import port_diag
+``` 
 
 # Work in Progress
 
 Add the ADS1x15 extension board
+Add the 6750 uv reader extension board
 
 # References
 
@@ -481,4 +492,8 @@ Add the ADS1x15 extension board
 * http://docs.micropython.org/en/latest/esp8266/general.html
 * https://github.com/catdog2/mpy_bme280_esp8266/blob/master/bme280.py
 * https://github.com/triplepoint/micropython_bme280_i2c/blob/master/bme280_i2c.py
+* https://github.com/adafruit/Adafruit_CircuitPython_VEML6070/blob/master/adafruit_veml6070.py
+* https://www.vishay.com/docs/84310/designingveml6070.pdf
+* https://www.vishay.com/docs/84277/veml6070.pdf
+* 
 * ...

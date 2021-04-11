@@ -157,6 +157,9 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"]=="test":
             print("I2C TEST started")
             Sensors.test_oled(msgDict["msg"]["value"])
+        if msgDict["msg"]["action"] == "veml6070":
+            print("veml6070 read")
+            Sensors.send_veml6070_info(mqttc)
             
     except BaseException as e:
         print("An exception occurred at subscribe stage")
@@ -245,6 +248,7 @@ def load_init_file():
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
                 Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
+                Sensors.send_veml6070_info(mqttc)
                 Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
                 # send_dht_info(initconfig)
                 pubtime = time()
@@ -304,7 +308,7 @@ def update_boot_wifi():
 
 
 def main():
-    print("Hello Welcome to SYDCA ESP APP")
+    print("Hello Welcome to SYDCA ESP OS")
 
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
