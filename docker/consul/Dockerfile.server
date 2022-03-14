@@ -1,5 +1,5 @@
 FROM aurelbruno06/consul_base
-MAINTAINER Aurelien Bruno <aurelbruno06@gmail.com>
+LABEL MAINTAINER="Aurelien Bruno <aurelbruno06@gmail.com>"
 RUN echo "v1.0.0" > /tmp/version
 ADD ./consul.d /etc/consul.d
 ADD start.sh /root/
