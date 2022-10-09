@@ -20,7 +20,7 @@ initconfig = {}
 waitConfig = False
 Sensors = None
 IPAddr = None
-
+mac = None
 rtc = RTC()
 
 
@@ -52,6 +52,8 @@ def do_wifi_connect(config):
             wlan.active(True)
             wlan.config(dhcp_hostname=config["board"]["id"])
             print('connecting to '+config['wifi']['ssid']+' network...')
+            mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+            print('Device MAC is:'+mac)
             wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
             while not wlan.isconnected():
                 pass
@@ -317,7 +319,6 @@ def update_boot_wifi():
 
 def main():
     print("Hello Welcome to SYDCA ESP OS")
-
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
     machid = ure.sub("\\\\x", "", machid)
