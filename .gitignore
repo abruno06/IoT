@@ -4,3 +4,12 @@ ESP8266/.vscode/settings.json
 ESP8266/bootmgr.json
 ESP8266/config.json
 ESP8266/init-1.json
+ESP8266/*.mpy
+ESP8266/ads1x15.mpy
+ESP8266/ads1x15.mpy
+ESP8266/bme280_i2c.mpy
+ESP8266/mcp230xx.mpy
+ESP8266/sydca_app.mpy
+ESP8266/sydca_ota.mpy
+ESP8266/sydca_sensors.mpy
+ESP8266/veml6070_i2c.mpy

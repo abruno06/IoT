@@ -460,7 +460,11 @@ once done reset your board FS using
 ``` code
 uos.VfsLfs2.mkfs(bdev)
 ```
-
+then webrepl
+``` code
+import webrepl_setup 
+select 'd' option
+```
 
 ## Get your board.id
 you can now get the machine id of your board that will be used as boot **board.id**
