@@ -59,7 +59,13 @@ def do_wifi_connect(config):
         IPAddr = wlan.ifconfig()
         import ntptime
         print('setting time')
-        ntptime.settime()  # set the rtc datetime from the remote server
+        try:
+          ntptime.settime()  # set the rtc datetime from the remote server
+        except BaseException as etime:
+            print("An exception occurred during do_wifi_connect time setting skip it")
+            import sys
+            sys.print_exception(etime)
+            sleep(10)
     # print(timeStr(rtc.datetime()))    # get the date and time in UTC
     except BaseException as e:
         print("An exception occurred during do_wifi_connect")
@@ -172,7 +178,8 @@ def do_mqtt_boot_connect(config):
     from umqtt.simple import MQTTClient
     global mqttc
     try:
-        # print(config)
+        print("MQTT Server")
+        print(config["mqtt"]["server"])
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
                        user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
         registerjs = {}
@@ -187,6 +194,7 @@ def do_mqtt_boot_connect(config):
         mqttc.connect()
         mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
         mqttc.set_callback(mqtt_boot_subscribe)
+         
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
     except BaseException as e:
@@ -257,7 +265,7 @@ def load_init_file():
             print("An exception occurred:rebooting")
             import sys
             sys.print_exception(e)
-            sleep(1)
+            sleep(60)
             machine.reset()
 
 
@@ -279,7 +287,7 @@ def boot_init():
     global waitConfig
     waitConfig = True
     while waitConfig:
-        mqttc.check_msg()
+         mqttc.check_msg() 
 
     print("Boot is completed")
 
@@ -317,7 +325,10 @@ def main():
     machid = ure.sub("'", "", machid)
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
-    boot_init()
+    try:
+        boot_init()
+    except OSError as err:
+        print("OS error >: {0}".format(err))
     # print(initfile.readlines())
     print("Start Running Mode")
     load_init_file()
