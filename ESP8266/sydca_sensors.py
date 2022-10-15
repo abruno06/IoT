@@ -29,6 +29,7 @@ class sensors:
     ssd1306 = None #Oled
     bme280 = None
     veml6070 = None #UV Sensor
+    ads1x15 = None # Analog Converter
     rtc = RTC()
 
     def __init__(self, config):
@@ -129,6 +130,17 @@ class sensors:
                 import sys
                 sys.print_exception(e)        
 
+        if ("ads1x15" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ads1x15"]):
+            try:
+                if (self.ads1x15 is None):
+                     print("sensors: ads1x15 initializing")
+                     import ads1x15
+                     self.adsx115 = ads1x15.ADS1115(i2c=self.i2cbus,addr=int(self.config["board"]["i2c"]["ads1x15"]), gain=int(self.config["ads1x15"]["gain"]))
+                     print("sensors: ads1x15 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during ads1x15 activation")
+                import sys
+                sys.print_exception(e)   
     
     def send_mcp_info(self, mqttc):
         try:
@@ -230,9 +242,8 @@ class sensors:
     def send_bme280_info(self, mqttc):
         try:
             if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
-                if self.bme280 is None:
-                    if (self.bme280 is None):
-                        print("sensors: bme280 initializing")
+                if self.bme280 is None:    
+                    print("sensors: bme280 initializing")
                     import bme280_i2c
                     self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
                     self.bme280.set_measurement_settings(
@@ -413,4 +424,25 @@ class sensors:
         except BaseException as e:
             print("sensors:An exception occurred during oled test")
             import sys
-            sys.print_exception(e)            
+            sys.print_exception(e)      
+
+    def get_ads1x15_sample(self, value):
+        try:
+            if ("ads1x15" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ads1x15"] ):
+                if (self.ads1x15 is None):
+                    try:
+                        print("sensors: ads1x15 initializing")
+                        import ads1x15
+                        self.adsx115 = ads1x15.ADS1115(i2c=self.i2cbus,addr=int(self.config["board"]["i2c"]["ads1x15"]), gain=int(self.config["ads1x15"]["gain"]))
+                        print("sensors: ads1x15 initialized")
+                    except BaseException as e:
+                        print("sensors:An exception occurred during ads1x15 activation")
+                        import sys
+                        sys.print_exception(e)   
+                print("ads1x15 is set")
+            else:
+                print("ads1x15 is not available")
+        except BaseException as e:
+            print("sensors:An exception occurred during ads1x15 sampling")
+            import sys
+            sys.print_exception(e)      

@@ -168,6 +168,14 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"] == "veml6070":
             print("veml6070 read")
             Sensors.send_veml6070_info(mqttc)
+        if msgDict["msg"]["action"] == "dynamic":
+            print("Dynamic function call")
+            try: 
+                eval(msgDict["msg"]["function"])
+            except BaseException as e:
+                print("An exception occurred during dynamic execution")
+                import sys
+                sys.print_exception(e)
             
     except BaseException as e:
         print("An exception occurred at subscribe stage")
