@@ -1,12 +1,12 @@
 from time import sleep, time
 from machine import RTC
 from sydca_sensors import sensors
-import ure
+import re
 import esp
 import network
 import machine
-import ubinascii
-import ujson
+import binascii
+import json
 import gc
 import sydca_ota
 import os
@@ -40,21 +40,21 @@ def file_exists(filename):
     except OSError:
         return False
 def decode_actions_data(data):
-    jsdata = ujson.loads(ubinascii.a2b_base64(data))
+    jsdata = json.loads(binascii.a2b_base64(data))
     save_actions_file(jsdata)
 
 
 def save_actions_file(data):
     print("Save actions json file")
     actfile = open('actions.json', 'w')
-    ujson.dump(data, actfile)
+    json.dump(data, actfile)
     actfile.close()
 
 def load_actions_file():
     if file_exists('actions.json') : 
         actfile = open('actions.json', 'r')
         global ActionsDict
-        ActionsDict = ujson.load(actfile)
+        ActionsDict = json.load(actfile)
         actfile.close()
         print(ActionsDict)
     else:
@@ -68,7 +68,7 @@ def free_space():
 def save_init_file(data):
     print("Save Init file")
     initfile = open('config.json', 'w')
-    ujson.dump(data, initfile)
+    json.dump(data, initfile)
     initfile.close()
 
 
@@ -84,7 +84,7 @@ def do_wifi_connect(config):
             wlan.active(True)
             wlan.config(dhcp_hostname=config["board"]["id"])
             print('connecting to '+config['wifi']['ssid']+' network...')
-            mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+            mac = binascii.hexlify(network.WLAN().config('mac'),':').decode()
             print('Device MAC is:'+mac)
             wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
             while not wlan.isconnected():
@@ -113,14 +113,14 @@ def mqtt_boot_subscribe(topic, msg):
     print(msg)
     global waitConfig
     try:
-        msgDict = ujson.loads(msg)
+        msgDict = json.loads(msg)
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
         if msgDict["msg"]["action"] == "bootstrap":
             print("Bootstrap")
-            config = ujson.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
+            config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
             save_init_file(config)
             update_boot_wifi()
@@ -147,7 +147,7 @@ def mqtt_subscribe(topic, msg):
     print(msg)
    
     try:
-        msgDict = ujson.loads(msg)
+        msgDict = json.loads(msg)
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
@@ -185,7 +185,7 @@ def mqtt_subscribe(topic, msg):
             Sensors.send_ds18b20_info(mqttc)
         if msgDict["msg"]["action"]=="ota":
             print("ota will be loaded")
-            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],ubinascii.a2b_base64(msgDict["msg"]["value"]["data"]))
+            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],binascii.a2b_base64(msgDict["msg"]["value"]["data"]))
             Sensors.send_health_info(mqttc)
         if msgDict["msg"]["action"]=="hello":
             print("hello will be loaded")
@@ -249,9 +249,9 @@ def do_mqtt_boot_connect(config):
         # registerjs["machine_id"]=str(machine.unique_id().decode())
         print(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
-        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
-        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
         mqttc.set_callback(mqtt_boot_subscribe)
          
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
@@ -274,9 +274,9 @@ def do_mqtt_connect(config):
         # registerjs["machine_id"]=str(machine.unique_id().decode())
         print(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
-        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
-        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
 
         #global dhtsensor
         #dhtsensor = dht.DHT22(machine.Pin(config["board"]["pins"]["dht"]))
@@ -297,7 +297,7 @@ def load_init_file():
     global Sensors
     global IPAddr
     initfile = open('config.json', 'r')
-    initconfig = ujson.load(initfile)
+    initconfig = json.load(initfile)
     initfile.close()
     print(initconfig)
     Sensors = sensors(initconfig)
@@ -334,14 +334,14 @@ def load_init_file():
 
 def boot_init():
     initfile = open('boot.json', 'r')
-    bootconfig = ujson.load(initfile)
+    bootconfig = json.load(initfile)
     initfile.close()
     bootconfig["board"] = {}
     import ubinascii
-    machid = ubinascii.hexlify(machine.unique_id()).decode()
-    #machid = ure.sub("\\\\x", "", machid)
-    #machid = ure.sub("b'", "", machid)
-    #machid = ure.sub("'", "", machid)
+    machid = binascii.hexlify(machine.unique_id()).decode()
+    #machid = re.sub("\\\\x", "", machid)
+    #machid = re.sub("b'", "", machid)
+    #machid = re.sub("'", "", machid)
     bootconfig["board"]["id"] = machid
     do_wifi_connect(bootconfig)
     do_mqtt_boot_connect(bootconfig)
@@ -354,11 +354,11 @@ def boot_init():
 
 def update_boot_wifi():
     initfile = open('boot.json', 'r')
-    bootconfig = ujson.load(initfile)
+    bootconfig = json.load(initfile)
     initfile.close()
 
     configfile = open('config.json', 'r')
-    config = ujson.load(configfile)
+    config = json.load(configfile)
     configfile.close()
     
     #"wifi": {
@@ -369,7 +369,7 @@ def update_boot_wifi():
     bootconfig["wifi"]=config["wifi"]
 
     initfile = open('boot.json', 'w')
-    ujson.dump(bootconfig, initfile)
+    json.dump(bootconfig, initfile)
     initfile.close()
 
     print("Boot Wifi is updated")
@@ -380,9 +380,9 @@ def main():
     print("Hello Welcome to SYDCA ESP OS")
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
-    machid = ure.sub("\\\\x", "", machid)
-    machid = ure.sub("b'", "", machid)
-    machid = ure.sub("'", "", machid)
+    machid = re.sub("\\\\x", "", machid)
+    machid = re.sub("b'", "", machid)
+    machid = re.sub("'", "", machid)
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
     try:
