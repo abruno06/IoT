@@ -141,6 +141,44 @@ def mqtt_boot_subscribe(topic, msg):
         sleep(30)
         machine.reset()
 
+def decode_actions(message):
+    global mqttc
+    global Sensors
+    action = message["msg"]["actions"]
+    value = message["msg"]["value"]
+    if action == "dht":
+            print("DHT")
+            # send_dht_info(initconfig)
+            Sensors.send_dht_info(mqttc)
+    if action == "bme280":
+            print("bme280")
+            Sensors.send_bme280_info(mqttc)
+    if action == "boot":
+            print("Boot")
+            mqttc.disconnect()
+            machine.reset()
+            # boot_init()
+    if action == "mcp":
+            print("MCP")
+            Sensors.send_mcp_info(mqttc)
+    if action == "mcp_topic":
+            print("MCP")
+            Sensors.send_mcp_info_topics(mqttc)
+    if action == "ds18b20":
+            print("ds18b20 read")
+            Sensors.send_ds18b20_info(mqttc)
+    if action == "veml6070":
+            print("veml6070 read")
+            Sensors.send_veml6070_info(mqttc)
+    if action =="i2cscan":
+            print("I2C Scan started")
+            Sensors.scan_i2c(mqttc)
+    if action == "mcp_set":
+            print("MCP Set")
+            Sensors.set_mcp_info(value)
+    if action == "mcp_set_port":
+            print("MCP Set Port")
+            Sensors.set_mcp_port_info(value)
 
 def mqtt_subscribe(topic, msg):
     global initconfig
@@ -157,36 +195,10 @@ def mqtt_subscribe(topic, msg):
         # if str(topic)==initconfig["board"]["id"]:
         load_actions_file()
         print("searching for action")
-        if msgDict["msg"]["action"] == "dht":
-            print("DHT")
-            # send_dht_info(initconfig)
-            Sensors.send_dht_info(mqttc)
-        if msgDict["msg"]["action"] == "bme280":
-            print("bme280")
-            Sensors.send_bme280_info(mqttc)
+        decode_actions(msgDict)
         if msgDict["msg"]["action"] == "id":
             print("ID")
             initconfig["board"]["name"] = msgDict["msg"]["value"]
-        if msgDict["msg"]["action"] == "boot":
-            print("Boot")
-            mqttc.disconnect()
-            machine.reset()
-            # boot_init()
-        if msgDict["msg"]["action"] == "mcp":
-            print("MCP")
-            Sensors.send_mcp_info(mqttc)
-        if msgDict["msg"]["action"] == "mcp_topic":
-            print("MCP")
-            Sensors.send_mcp_info_topics(mqttc)
-        if msgDict["msg"]["action"] == "mcp_set":
-            print("MCP Set")
-            Sensors.set_mcp_info(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "mcp_set_port":
-            print("MCP Set Port")
-            Sensors.set_mcp_port_info(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "ds18b20":
-            print("ds18b20 read")
-            Sensors.send_ds18b20_info(mqttc)
         if msgDict["msg"]["action"]=="ota":
             print("ota will be loaded")
             sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],binascii.a2b_base64(msgDict["msg"]["value"]["data"]))
@@ -194,18 +206,12 @@ def mqtt_subscribe(topic, msg):
         if msgDict["msg"]["action"]=="hello":
             print("hello will be loaded")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
-        if msgDict["msg"]["action"]=="i2cscan":
-            print("I2C Scan started")
-            Sensors.scan_i2c(mqttc)
         if msgDict["msg"]["action"]=="ssd1306":
             print("I2C ssd1306 started")
             Sensors.message_oled(msgDict["msg"]["value"])
         if msgDict["msg"]["action"]=="test":
             print("I2C TEST started")
             Sensors.test_oled(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "veml6070":
-            print("veml6070 read")
-            Sensors.send_veml6070_info(mqttc)
         if msgDict["msg"]["action"] == "dynamic":
             print("Dynamic function call")
             try: 
