@@ -7,7 +7,7 @@ import ubinascii
 import time
 from machine import RTC, I2C, Pin
 import ubinascii
-import uos
+import os
 
 # "board": {
 #       "id": "sydca_esp_001",
@@ -356,12 +356,17 @@ class sensors:
         S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
         return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
     
-    
+    def free_space():
+        FS = os.statvfs("/")
+        print(FS[0],' ',FS[3])
+
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
-                    os = uos.uname()
-                    print (os)
-                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime())}
+                    osname = os.uname()
+                    print (osname)
+                    gc.collect()
+                    print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime()),"fs": self.free_space}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], ujson.dumps(message))
                     print("health "+self.config["board"]["id"]+" ok")

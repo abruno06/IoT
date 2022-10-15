@@ -9,6 +9,7 @@ import ubinascii
 import ujson
 import gc
 import sydca_ota
+import os
 print("Load sydca_app")
 # from machine import I2C, Pin
 
@@ -22,7 +23,7 @@ Sensors = None
 IPAddr = None
 mac = None
 rtc = RTC()
-
+ActionsDict = None
 
 def timeStr(rtcT):
     M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
@@ -31,6 +32,32 @@ def timeStr(rtcT):
     m = "0"+str(rtcT[5]) if (rtcT[5] < 10) else str(rtcT[5])
     S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
     return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
+
+def file_exists(filename):
+    try:
+        return (os.stat(filename)[0] & 0x4000) == 0
+    except OSError:
+        return False
+
+def save_actions_file(data):
+    print("Save actions json file")
+    actfile = open('actions.json', 'w')
+    ujson.dump(data, actfile)
+    actfile.close()
+
+def load_actions_file():
+    if file_exists('actions.json') : 
+        actfile = open('actions.json', 'r')
+        global ActionsDict
+        ActionsDict = ujson.load(actfile)
+        actfile.close()
+        print(ActionsDict)
+    else:
+        print("Not action file")
+
+def free_space():
+    FS = os.statvfs("/")
+    print(FS[0],FS[3])
 
 
 def save_init_file(data):
@@ -113,6 +140,7 @@ def mqtt_subscribe(topic, msg):
     global IPAddr
     print(str(topic))
     print(msg)
+   
     try:
         msgDict = ujson.loads(msg)
         print(msgDict)
@@ -188,8 +216,8 @@ def do_mqtt_boot_connect(config):
     from umqtt.simple import MQTTClient
     global mqttc
     try:
-        print("MQTT Server")
-        print(config["mqtt"]["server"])
+        print("MQTT Server:",config["mqtt"]["server"])
+        print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
                        user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
         registerjs = {}
@@ -258,6 +286,7 @@ def load_init_file():
     Sensors.send_dht_info(mqttc)
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
+    print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
     print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
     pubtime = time()
     while True:
