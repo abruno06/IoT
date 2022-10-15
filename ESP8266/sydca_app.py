@@ -141,17 +141,17 @@ def mqtt_boot_subscribe(topic, msg):
         sleep(30)
         machine.reset()
 
-#This function will look if there is an entry on the actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
+#This function will look if there is an entry on the Actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
 def check_actions_file(message):
-    action = message["msg"]["actions"]
+    action = message["msg"]["action"]
     value = ""
     if "value" in message["msg"]: 
         value = message["msg"]["value"]
-    if action in actions
-        print("action {} in actions will be executed with reduced context")
+    if action in Actions:
+        print("action {} in Actions will be executed with reduced context".format(action))
         try: 
-                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,"IPAddr",IPAddr}
-                eval(action[action],reduced_globals)
+                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr}
+                eval(Actions[action],reduced_globals)
         except BaseException as e:
                 print("An exception occurred during actions from local execution")
                 print("Be Aware for safety reason eval is running with limited global scope")
@@ -164,7 +164,7 @@ def decode_actions(message):
  #   global mqttc
  #   global Sensors
     check_actions_file(message)
-    action = message["msg"]["actions"]
+    action = message["msg"]["action"]
     value = ""
     if "value" in message["msg"]: 
         value = message["msg"]["value"]
@@ -208,7 +208,7 @@ def decode_actions(message):
     if action=="test":
             print("I2C TEST started")
             Sensors.test_oled(value)
-     if action=="hello":
+    if action=="hello":
             print("hello will be loaded")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
 
@@ -244,7 +244,7 @@ def mqtt_subscribe(topic, msg):
         if action == "dynamic":
             print("Dynamic function call")
             try: 
-                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,"IPAddr",IPAddr}
+                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr}
                 eval(message["msg"]["function"],reduced_globals)
             except BaseException as e:
                 print("An exception occurred during dynamic execution")
