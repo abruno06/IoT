@@ -140,10 +140,28 @@ def mqtt_boot_subscribe(topic, msg):
         sys.print_exception(e)
         sleep(30)
         machine.reset()
+def check_actions_file(message):
+    action = message["msg"]["actions"]
+    value = ""
+    if "value" in message["msg"]: 
+        value = message["msg"]["value"]
+    if action in actions
+        print("action {} in actions will be executed with reduced context")
+        try: 
+                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,"IPAddr",IPAddr}
+                eval(action[action],reduced_globals)
+        except BaseException as e:
+                print("An exception occurred during actions from local execution")
+                print("Be Aware for safety reason eval is running with limited global scope")
+                print(reduced_globals)
+                import sys
+                sys.print_exception(e)
+       
 
 def decode_actions(message):
-    global mqttc
-    global Sensors
+ #   global mqttc
+ #   global Sensors
+    check_actions_file(message)
     action = message["msg"]["actions"]
     value = ""
     if "value" in message["msg"]: 
@@ -182,12 +200,21 @@ def decode_actions(message):
     if action == "mcp_set_port":
             print("MCP Set Port")
             Sensors.set_mcp_port_info(value)
+    if action=="ssd1306":
+            print("I2C ssd1306 started")
+            Sensors.message_oled(value)
+    if action=="test":
+            print("I2C TEST started")
+            Sensors.test_oled(value)
+     if action=="hello":
+            print("hello will be loaded")
+            Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
 
 def mqtt_subscribe(topic, msg):
     global initconfig
-    global mqttc
-    global Sensors
-    global IPAddr
+  #  global mqttc
+  #  global Sensors
+  #  global IPAddr
     print(str(topic))
     print(msg)
    
@@ -212,15 +239,6 @@ def mqtt_subscribe(topic, msg):
             print("ota will be loaded")
             sydca_ota.save_ota_file(value["filename"],binascii.a2b_base64(value["data"]))
             Sensors.send_health_info(mqttc)
-        if action=="hello":
-            print("hello will be loaded")
-            Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
-        if action=="ssd1306":
-            print("I2C ssd1306 started")
-            Sensors.message_oled(value)
-        if action=="test":
-            print("I2C TEST started")
-            Sensors.test_oled(value)
         if action == "dynamic":
             print("Dynamic function call")
             try: 
@@ -313,9 +331,9 @@ def do_mqtt_connect(config):
 
 def load_init_file():
     global initconfig
-    global mqttc
+  #  global mqttc
     global Sensors
-    global IPAddr
+  #  global IPAddr
     initfile = open(CONFIG_FILE, 'r')
     initconfig = json.load(initfile)
     initfile.close()
