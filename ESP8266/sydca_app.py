@@ -24,7 +24,7 @@ Sensors = None
 IPAddr = None
 mac = None
 rtc = RTC()
-ActionsDict = None
+Actions = None
 
 BOOT_FILE = "boot.json"
 CONFIG_FILE = "config.json"
@@ -57,10 +57,10 @@ def save_actions_file(data):
 def load_actions_file():
     if file_exists(ACTIONS_FILE) : 
         actfile = open(ACTIONS_FILE, 'r')
-        global ActionsDict
-        ActionsDict = json.load(actfile)
+        global Actions
+        Actions = json.load(actfile)
         actfile.close()
-        print(ActionsDict)
+        print(Actions)
     else:
         print("No actions file")
 
@@ -145,7 +145,10 @@ def decode_actions(message):
     global mqttc
     global Sensors
     action = message["msg"]["actions"]
-    value = message["msg"]["value"]
+    value = ""
+    if "value" in message["msg"]: 
+        value = message["msg"]["value"]
+
     if action == "dht":
             print("DHT")
             # send_dht_info(initconfig)
@@ -189,38 +192,47 @@ def mqtt_subscribe(topic, msg):
     print(msg)
    
     try:
-        msgDict = json.loads(msg)
-        print(msgDict)
+        message = json.loads(msg)
+        print(message)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         load_actions_file()
         print("searching for action")
-        decode_actions(msgDict)
-        if msgDict["msg"]["action"] == "id":
+        decode_actions(message)
+
+        action = message["msg"]["action"] 
+        value = ""
+        if "value" in message["msg"]: 
+            value = message["msg"]["value"]
+        
+        if action == "id":
             print("ID")
-            initconfig["board"]["name"] = msgDict["msg"]["value"]
-        if msgDict["msg"]["action"]=="ota":
+            initconfig["board"]["name"] = value
+        if action=="ota":
             print("ota will be loaded")
-            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],binascii.a2b_base64(msgDict["msg"]["value"]["data"]))
+            sydca_ota.save_ota_file(value["filename"],binascii.a2b_base64(value["data"]))
             Sensors.send_health_info(mqttc)
-        if msgDict["msg"]["action"]=="hello":
+        if action=="hello":
             print("hello will be loaded")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
-        if msgDict["msg"]["action"]=="ssd1306":
+        if action=="ssd1306":
             print("I2C ssd1306 started")
-            Sensors.message_oled(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"]=="test":
+            Sensors.message_oled(value)
+        if action=="test":
             print("I2C TEST started")
-            Sensors.test_oled(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "dynamic":
+            Sensors.test_oled(value)
+        if action == "dynamic":
             print("Dynamic function call")
             try: 
-                eval(msgDict["msg"]["function"])
+                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,"IPAddr",IPAddr}
+                eval(message["msg"]["function"],reduced_globals)
             except BaseException as e:
                 print("An exception occurred during dynamic execution")
+                print("Be Aware for safety reason eval is running with limited global scope")
+                print(reduced_globals)
                 import sys
                 sys.print_exception(e)
-        if msgDict["msg"]["action"] == "update_actions":
+        if action == "update_actions":
             print("update_actions function call")
             try: 
                 print(os.listdir())
@@ -228,9 +240,7 @@ def mqtt_subscribe(topic, msg):
                 print(globals())
                 print("Locals")
                 print(locals())
-                eval(msgDict["msg"]["function"],{'msgDict':msgDict,'decode_actions_data':decode_actions_data})
-                print(os.listdir())
-                print(globals())
+                eval(message["msg"]["function"],{'message':message,'decode_actions_data':decode_actions_data})
             except BaseException as e:
                 print("An exception occurred during update_actions execution")
                 import sys
