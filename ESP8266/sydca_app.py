@@ -26,6 +26,10 @@ mac = None
 rtc = RTC()
 ActionsDict = None
 
+BOOT_FILE = "boot.json"
+CONFIG_FILE = "config.json"
+ACTIONS_FILE = "actions.json"
+
 def timeStr(rtcT):
     M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
     D = "0"+str(rtcT[2]) if (rtcT[2] < 10) else str(rtcT[2])
@@ -46,13 +50,13 @@ def decode_actions_data(data):
 
 def save_actions_file(data):
     print("Save actions json file")
-    actfile = open('actions.json', 'w')
+    actfile = open(ACTIONS_FILE, 'w')
     json.dump(data, actfile)
     actfile.close()
 
 def load_actions_file():
-    if file_exists('actions.json') : 
-        actfile = open('actions.json', 'r')
+    if file_exists(ACTIONS_FILE) : 
+        actfile = open(ACTIONS_FILE, 'r')
         global ActionsDict
         ActionsDict = json.load(actfile)
         actfile.close()
@@ -67,7 +71,7 @@ def free_space():
 
 def save_init_file(data):
     print("Save Init file")
-    initfile = open('config.json', 'w')
+    initfile = open(CONFIG_FILE, 'w')
     json.dump(data, initfile)
     initfile.close()
 
@@ -296,7 +300,7 @@ def load_init_file():
     global mqttc
     global Sensors
     global IPAddr
-    initfile = open('config.json', 'r')
+    initfile = open(CONFIG_FILE, 'r')
     initconfig = json.load(initfile)
     initfile.close()
     print(initconfig)
@@ -333,7 +337,7 @@ def load_init_file():
 
 
 def boot_init():
-    initfile = open('boot.json', 'r')
+    initfile = open(BOOT_FILE, 'r')
     bootconfig = json.load(initfile)
     initfile.close()
     bootconfig["board"] = {}
@@ -353,25 +357,21 @@ def boot_init():
     print("Boot is completed")
 
 def update_boot_wifi():
-    initfile = open('boot.json', 'r')
+    initfile = open(BOOT_FILE, 'r')
     bootconfig = json.load(initfile)
     initfile.close()
 
-    configfile = open('config.json', 'r')
+    configfile = open(CONFIG_FILE, 'r')
     config = json.load(configfile)
     configfile.close()
-    
     #"wifi": {
     #    "ssid": "sydca",
     #    "password": "sydCA_Local_N_psk" 
     #},
-
     bootconfig["wifi"]=config["wifi"]
-
-    initfile = open('boot.json', 'w')
+    initfile = open(BOOT_FILE, 'w')
     json.dump(bootconfig, initfile)
     initfile.close()
-
     print("Boot Wifi is updated")
 
 
@@ -380,9 +380,11 @@ def main():
     print("Hello Welcome to SYDCA ESP OS")
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
-    machid = re.sub("\\\\x", "", machid)
-    machid = re.sub("b'", "", machid)
-    machid = re.sub("'", "", machid)
+    #machid = re.sub("\\\\x", "", machid)
+    #machid = re.sub("b'", "", machid)
+    #machid = re.sub("'", "", machid)
+    machid = machid.replace("\\\\x","").replace("b'","").replace("'","")
+
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
     try:
