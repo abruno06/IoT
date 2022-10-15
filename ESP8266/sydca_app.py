@@ -255,16 +255,18 @@ def mqtt_subscribe(topic, msg):
         if action == "update_actions":
             print("update_actions function call")
             try: 
-                print(os.listdir())
-                print("Globals")
-                print(globals())
-                print("Locals")
-                print(locals())
                 eval(message["msg"]["function"],{'message':message,'decode_actions_data':decode_actions_data})
             except BaseException as e:
                 print("An exception occurred during update_actions execution")
                 import sys
                 sys.print_exception(e)
+        if action == "dump_context":
+            print("dump context function call")
+            print(os.listdir())
+            print("Globals")
+            print(globals())
+            print("Locals")
+            print(locals())
     
     except BaseException as e:
         print("An exception occurred at subscribe stage")
