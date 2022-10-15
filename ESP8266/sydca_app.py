@@ -10,6 +10,7 @@ import ujson
 import gc
 import sydca_ota
 import os
+print("")
 print("Load sydca_app")
 # from machine import I2C, Pin
 
@@ -38,6 +39,10 @@ def file_exists(filename):
         return (os.stat(filename)[0] & 0x4000) == 0
     except OSError:
         return False
+def decode_actions_data(data):
+    jsdata = ujson.loads(ubinascii.a2b_base64(data))
+    save_actions_file(jsdata)
+
 
 def save_actions_file(data):
     print("Save actions json file")
@@ -53,7 +58,7 @@ def load_actions_file():
         actfile.close()
         print(ActionsDict)
     else:
-        print("Not action file")
+        print("No actions file")
 
 def free_space():
     FS = os.statvfs("/")
@@ -146,6 +151,7 @@ def mqtt_subscribe(topic, msg):
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
+        load_actions_file()
         print("searching for action")
         if msgDict["msg"]["action"] == "dht":
             print("DHT")
@@ -204,7 +210,22 @@ def mqtt_subscribe(topic, msg):
                 print("An exception occurred during dynamic execution")
                 import sys
                 sys.print_exception(e)
-            
+        if msgDict["msg"]["action"] == "update_actions":
+            print("update_actions function call")
+            try: 
+                print(os.listdir())
+                print("Globals")
+                print(globals())
+                print("Locals")
+                print(locals())
+                eval(msgDict["msg"]["function"],{'msgDict':msgDict,'decode_actions_data':decode_actions_data})
+                print(os.listdir())
+                print(globals())
+            except BaseException as e:
+                print("An exception occurred during update_actions execution")
+                import sys
+                sys.print_exception(e)
+    
     except BaseException as e:
         print("An exception occurred at subscribe stage")
         import sys
@@ -286,6 +307,7 @@ def load_init_file():
     Sensors.send_dht_info(mqttc)
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
+    gc.collect()
     print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
     print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
     pubtime = time()

@@ -356,9 +356,11 @@ class sensors:
         S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
         return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
     
-    def free_space():
+    def free_space(self):
         FS = os.statvfs("/")
-        print(FS[0],' ',FS[3])
+        return """size={r_size} free={r_free}""".format(r_size=FS[0],r_free=FS[3])
+    def free_memory(self):
+        return   """free={} used={}""".format(gc.mem_free(), gc.mem_alloc())
 
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
@@ -366,7 +368,7 @@ class sensors:
                     print (osname)
                     gc.collect()
                     print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-                    message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime()),"fs": self.free_space}
+                    message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime()),"fs": self.free_space(),"memory":self.free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], ujson.dumps(message))
                     print("health "+self.config["board"]["id"]+" ok")
