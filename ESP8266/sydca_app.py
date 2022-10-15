@@ -140,6 +140,8 @@ def mqtt_boot_subscribe(topic, msg):
         sys.print_exception(e)
         sleep(30)
         machine.reset()
+
+#This function will look if there is an entry on the actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
 def check_actions_file(message):
     action = message["msg"]["actions"]
     value = ""
