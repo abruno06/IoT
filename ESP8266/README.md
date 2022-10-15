@@ -442,6 +442,7 @@ https://micropython.org/resources/firmware/esp8266-20200911-v1.13.bin
 Tested with v1.14
 https://micropython.org/resources/firmware/esp8266-20210202-v1.14.bin
 
+Tested with v1.19
 
 
 ## Connect to your computer
