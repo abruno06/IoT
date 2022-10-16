@@ -8,7 +8,7 @@ import time
 from machine import RTC, I2C, Pin
 #import ubinascii
 import os
-
+ 
 # "board": {
 #       "id": "sydca_esp_001",
 #        "pins": {

@@ -421,7 +421,7 @@ def main():
     #machid = re.sub("\\\\x", "", machid)
     #machid = re.sub("b'", "", machid)
     #machid = re.sub("'", "", machid)
-    machid = machid.replace("\\\\x","").replace("b'","").replace("'","")
+    machid = machid.replace("\\x","").replace("b'","").replace("'","")
 
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
