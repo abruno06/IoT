@@ -131,7 +131,7 @@ def mqtt_boot_subscribe(topic, msg):
     global waitConfig
     try:
         boot_message = json.loads(msg)
-        print(msgDict)
+        print(boot_message)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
@@ -155,15 +155,14 @@ def mqtt_boot_subscribe(topic, msg):
 
 #This function will look if there is an entry on the Actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
 def check_actions_file(message):
-    global Actions
     action = message["msg"]["action"]
     value = ""
     if "value" in message["msg"]: 
         value = message["msg"]["value"]
-    
-    Actions = Actions_Init | Actions
-
-    if action in Actions:
+    _tmp = {}
+    _tmp.update(Actions_Init)
+    _tmp.update(Actions)
+    if action in _tmp:
         print("action {} in Actions will be executed with reduced context".format(action))
         try: 
                 reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr,'action':action,'value':value}
@@ -174,7 +173,7 @@ def check_actions_file(message):
                 print(reduced_globals)
                 import sys
                 sys.print_exception(e)
-       
+    _tmp.clear()
 
 def decode_actions(message):
  #   global mqttc
