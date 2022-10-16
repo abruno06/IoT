@@ -364,6 +364,7 @@ def load_init_file():
     #Intentiate the Sensors 
     Sensors = sensors(initconfig)
     mqttc.disconnect()
+    #
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
     Sensors.send_dht_info(mqttc)
