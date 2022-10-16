@@ -1,14 +1,14 @@
 import machine
 import gc
-import ujson
-import ubinascii
+import json
+import binascii
 
 #from time import sleep, time
 import time
 from machine import RTC, I2C, Pin
-import ubinascii
-import uos
-
+#import ubinascii
+import os
+ 
 # "board": {
 #       "id": "sydca_esp_001",
 #        "pins": {
@@ -29,6 +29,7 @@ class sensors:
     ssd1306 = None #Oled
     bme280 = None
     veml6070 = None #UV Sensor
+    ads1x15 = None # Analog Converter
     rtc = RTC()
 
     def __init__(self, config):
@@ -129,6 +130,17 @@ class sensors:
                 import sys
                 sys.print_exception(e)        
 
+        if ("ads1x15" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ads1x15"]):
+            try:
+                if (self.ads1x15 is None):
+                     print("sensors: ads1x15 initializing")
+                     import ads1x15
+                     self.adsx115 = ads1x15.ADS1115(i2c=self.i2cbus,addr=int(self.config["board"]["i2c"]["ads1x15"]), gain=int(self.config["ads1x15"]["gain"]))
+                     print("sensors: ads1x15 initialized")
+            except BaseException as e:
+                print("sensors:An exception occurred during ads1x15 activation")
+                import sys
+                sys.print_exception(e)   
     
     def send_mcp_info(self, mqttc):
         try:
@@ -142,7 +154,7 @@ class sensors:
                         "pin": input_list[i], "value": mcpinput[i]}
 
                 mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" +
-                              self.config["board"]["id"]+"/inputs", ujson.dumps(mcp_message))
+                              self.config["board"]["id"]+"/inputs", json.dumps(mcp_message))
             else:
                 print("mcp23017 is not activated")
         except BaseException as e:
@@ -160,7 +172,7 @@ class sensors:
                 for i in range(len(input_list)):
                     mcp_message = {"pin": input_list[i], "value": mcpinput[i]}
                     mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" + self.config["board"]
-                                  ["id"]+"/input/"+str(input_list_name[i]), ujson.dumps(mcp_message))
+                                  ["id"]+"/input/"+str(input_list_name[i]), json.dumps(mcp_message))
             else:
                 print("mcp23017 is not activated")
         except BaseException as e:
@@ -217,9 +229,9 @@ class sensors:
                 dhtjst["value"] = self.dhtsensor.temperature()
                 dhtjsh["value"] = self.dhtsensor.humidity()
                 mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/" +
-                              self.config["board"]["id"]+"/temperature", ujson.dumps(dhtjst))
+                              self.config["board"]["id"]+"/temperature", json.dumps(dhtjst))
                 mqttc.publish(self.config["mqtt"]["topic"]["publish"]+"/" +
-                              self.config["board"]["id"]+"/humidity", ujson.dumps(dhtjsh))
+                              self.config["board"]["id"]+"/humidity", json.dumps(dhtjsh))
             else:
                 print("dht is not activated")
         except BaseException as e:
@@ -230,9 +242,8 @@ class sensors:
     def send_bme280_info(self, mqttc):
         try:
             if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
-                if self.bme280 is None:
-                    if (self.bme280 is None):
-                        print("sensors: bme280 initializing")
+                if self.bme280 is None:    
+                    print("sensors: bme280 initializing")
                     import bme280_i2c
                     self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
                     self.bme280.set_measurement_settings(
@@ -264,11 +275,11 @@ class sensors:
                 mpejsh["value"] = results["humidity"]
              
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
-                               self.config["board"]["id"]+"/temperature", ujson.dumps(mpejst))
+                               self.config["board"]["id"]+"/temperature", json.dumps(mpejst))
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
-                               self.config["board"]["id"]+"/humidity", ujson.dumps(mpejsh))
+                               self.config["board"]["id"]+"/humidity", json.dumps(mpejsh))
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
-                               self.config["board"]["id"]+"/pressure", ujson.dumps(mpejsp))
+                               self.config["board"]["id"]+"/pressure", json.dumps(mpejsp))
             else:
                 print("bme280 is not activated")
         except BaseException as e:
@@ -292,7 +303,7 @@ class sensors:
                     probeId = ubinascii.hexlify(rom).decode();
                     message = {"value": ds.read_temp(rom)}
                     mqttc.publish(self.config["ds18b20"]["topic"]["publish"]+"/" + self.config["board"]
-                                  ["id"]+"/temperature/"+probeId, ujson.dumps(message))
+                                  ["id"]+"/temperature/"+probeId, json.dumps(message))
                     print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
             else:
                 print("ds18b20 is not activated")     
@@ -324,9 +335,9 @@ class sensors:
         
              
                 mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
-                               self.config["board"]["id"]+"/uv", ujson.dumps(mpejsu))
+                               self.config["board"]["id"]+"/uv", json.dumps(mpejsu))
                 mqttc.publish(self.config["veml6070"]["topic"]["publish"]+"/" +
-                               self.config["board"]["id"]+"/uv_index", ujson.dumps(mpejsi))
+                               self.config["board"]["id"]+"/uv_index", json.dumps(mpejsi))
               
             else:
                 print("veml6070_i2c is not activated")
@@ -345,14 +356,21 @@ class sensors:
         S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
         return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
     
-    
+    def free_space(self):
+        FS = os.statvfs("/")
+        return """size={r_size} free={r_free}""".format(r_size=FS[0],r_free=FS[3])
+    def free_memory(self):
+        return   """free={} used={}""".format(gc.mem_free(), gc.mem_alloc())
+
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
-                    os = uos.uname()
-                    print (os)
-                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime())}
+                    osname = os.uname()
+                    print (osname)
+                    gc.collect()
+                    print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime()),"fs": self.free_space(),"memory":self.free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
-                                  ["id"], ujson.dumps(message))
+                                  ["id"], json.dumps(message))
                     print("health "+self.config["board"]["id"]+" ok")
            
         except BaseException as e:
@@ -374,7 +392,7 @@ class sensors:
             for device in devices:  
                 print("Decimal address: ",device," | Hexa address: ",hex(device))
                 mqttc.publish(self.config["board"]["i2c"]["topic"]["publish"]+"/" + self.config["board"]
-                                  ["id"]+"/address/"+str(device), ujson.dumps(message))
+                                  ["id"]+"/address/"+str(device), json.dumps(message))
         except BaseException as e:
             print("sensors:An exception occurred during I2C reading")
             import sys
@@ -413,4 +431,26 @@ class sensors:
         except BaseException as e:
             print("sensors:An exception occurred during oled test")
             import sys
-            sys.print_exception(e)            
+            sys.print_exception(e)      
+
+    def get_ads1x15_sample(self, value):
+        try:
+            if ("ads1x15" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ads1x15"] ):
+                if (self.ads1x15 is None):
+                    try:
+                        print("sensors: ads1x15 initializing")
+                        print("value:",value)
+                        import ads1x15
+                        self.adsx115 = ads1x15.ADS1115(i2c=self.i2cbus,addr=int(self.config["board"]["i2c"]["ads1x15"]), gain=int(self.config["ads1x15"]["gain"]))
+                        print("sensors: ads1x15 initialized")
+                    except BaseException as e:
+                        print("sensors:An exception occurred during ads1x15 activation")
+                        import sys
+                        sys.print_exception(e)   
+                print("ads1x15 is set")
+            else:
+                print("ads1x15 is not available")
+        except BaseException as e:
+            print("sensors:An exception occurred during ads1x15 sampling")
+            import sys
+            sys.print_exception(e)      

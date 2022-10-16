@@ -1,2 +1,3 @@
 .json
-.mpy
+!actions.json
+!actions-init.json
