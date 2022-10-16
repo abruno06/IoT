@@ -49,7 +49,7 @@ def decode_actions_data(data):
     jsdata = json.loads(binascii.a2b_base64(data))
     save_actions_file(jsdata)
 
-def load_actions_file():
+def load_actions_init_file():
     if file_exists(ACTIONS_INIT_FILE) : 
         actfile = open(ACTIONS_INIT_FILE, 'r')
         global Actions_Init
@@ -59,6 +59,7 @@ def load_actions_file():
     else:
         print("No actions file")
 
+def load_actions_file():
     if file_exists(ACTIONS_FILE) : 
         actfile = open(ACTIONS_FILE, 'r')
         global Actions
@@ -358,6 +359,9 @@ def load_init_file():
     initconfig = json.load(initfile)
     initfile.close()
     print(initconfig)
+    #Load the action_init file one time for all
+    load_actions_init_file()
+    #Intentiate the Sensors 
     Sensors = sensors(initconfig)
     mqttc.disconnect()
     do_wifi_connect(initconfig)
