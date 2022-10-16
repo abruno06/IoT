@@ -150,7 +150,7 @@ def check_actions_file(message):
     if action in Actions:
         print("action {} in Actions will be executed with reduced context".format(action))
         try: 
-                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr}
+                reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr,'action':action,'value':value}
                 eval(Actions[action],reduced_globals)
         except BaseException as e:
                 print("An exception occurred during actions from local execution")
