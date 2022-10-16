@@ -185,48 +185,48 @@ def decode_actions(message):
     if "value" in message["msg"]: 
         value = message["msg"]["value"]
 
-    if action == "dht":
-            print("DHT")
-            # send_dht_info(initconfig)
-            Sensors.send_dht_info(mqttc)
-    if action == "bme280":
-            print("bme280")
-            Sensors.send_bme280_info(mqttc)
+    # if action == "dht":
+    #         print("DHT")
+    #         # send_dht_info(initconfig)
+    #         Sensors.send_dht_info(mqttc)
+    # if action == "bme280":
+    #         print("bme280")
+    #         Sensors.send_bme280_info(mqttc)
     if action == "boot":
             print("Boot")
             mqttc.disconnect()
             machine.reset()
             # boot_init()
-    if action == "mcp":
-            print("MCP")
-            Sensors.send_mcp_info(mqttc)
-    if action == "mcp_topic":
-            print("MCP")
-            Sensors.send_mcp_info_topics(mqttc)
-    if action == "ds18b20":
-            print("ds18b20 read")
-            Sensors.send_ds18b20_info(mqttc)
-    if action == "veml6070":
-            print("veml6070 read")
-            Sensors.send_veml6070_info(mqttc)
-    if action =="i2cscan":
-            print("I2C Scan started")
-            Sensors.scan_i2c(mqttc)
-    if action == "mcp_set":
-            print("MCP Set")
-            Sensors.set_mcp_info(value)
-    if action == "mcp_set_port":
-            print("MCP Set Port")
-            Sensors.set_mcp_port_info(value)
-    if action=="ssd1306":
-            print("I2C ssd1306 started")
-            Sensors.message_oled(value)
-    if action=="test":
-            print("I2C TEST started")
-            Sensors.test_oled(value)
-    if action=="hello":
-            print("hello will be loaded")
-            Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+    # if action == "mcp":
+    #         print("MCP")
+    #         Sensors.send_mcp_info(mqttc)
+    # if action == "mcp_topic":
+    #         print("MCP")
+    #         Sensors.send_mcp_info_topics(mqttc)
+    # if action == "ds18b20":
+    #         print("ds18b20 read")
+    #         Sensors.send_ds18b20_info(mqttc)
+    # if action == "veml6070":
+    #         print("veml6070 read")
+    #         Sensors.send_veml6070_info(mqttc)
+    # if action =="i2cscan":
+    #         print("I2C Scan started")
+    #         Sensors.scan_i2c(mqttc)
+    # if action == "mcp_set":
+    #         print("MCP Set")
+    #         Sensors.set_mcp_info(value)
+    # if action == "mcp_set_port":
+    #         print("MCP Set Port")
+    #         Sensors.set_mcp_port_info(value)
+    # if action=="ssd1306":
+    #         print("I2C ssd1306 started")
+    #         Sensors.message_oled(value)
+    # if action=="test":
+    #         print("I2C TEST started")
+    #         Sensors.test_oled(value)
+    # if action=="hello":
+    #         print("hello will be loaded")
+    #         Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
 
 def mqtt_subscribe(topic, msg):
     global initconfig
@@ -437,7 +437,7 @@ def main():
     #machid = re.sub("\\\\x", "", machid)
     #machid = re.sub("b'", "", machid)
     #machid = re.sub("'", "", machid)
-    machid = machid.replace("\\\\x","").replace("b'","").replace("'","")
+    machid = machid.replace("\\x","").replace("b'","").replace("'","")
 
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
