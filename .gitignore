@@ -5,3 +5,6 @@ ESP8266/bootmgr.json
 ESP8266/config.json
 ESP8266/init-1.json
 
+
+**/.DS_Store
+**.log
