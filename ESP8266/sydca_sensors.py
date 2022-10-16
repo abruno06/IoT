@@ -439,6 +439,7 @@ class sensors:
                 if (self.ads1x15 is None):
                     try:
                         print("sensors: ads1x15 initializing")
+                        print("value:",value)
                         import ads1x15
                         self.adsx115 = ads1x15.ADS1115(i2c=self.i2cbus,addr=int(self.config["board"]["i2c"]["ads1x15"]), gain=int(self.config["ads1x15"]["gain"]))
                         print("sensors: ads1x15 initialized")
