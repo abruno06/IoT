@@ -25,10 +25,12 @@ IPAddr = None
 mac = None
 rtc = RTC()
 Actions = None
+Actions_Init = None
 
 BOOT_FILE = "boot.json"
 CONFIG_FILE = "config.json"
 ACTIONS_FILE = "actions.json"
+ACTIONS_INIT_FILE = "actions-init.json"
 
 def timeStr(rtcT):
     M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
@@ -47,14 +49,16 @@ def decode_actions_data(data):
     jsdata = json.loads(binascii.a2b_base64(data))
     save_actions_file(jsdata)
 
-
-def save_actions_file(data):
-    print("Save actions json file")
-    actfile = open(ACTIONS_FILE, 'w')
-    json.dump(data, actfile)
-    actfile.close()
-
 def load_actions_file():
+    if file_exists(ACTIONS_INIT_FILE) : 
+        actfile = open(ACTIONS_INIT_FILE, 'r')
+        global Actions_Init
+        Actions_Init = json.load(actfile)
+        actfile.close()
+        print(Actions_Init)
+    else:
+        print("No actions file")
+
     if file_exists(ACTIONS_FILE) : 
         actfile = open(ACTIONS_FILE, 'r')
         global Actions
@@ -63,6 +67,14 @@ def load_actions_file():
         print(Actions)
     else:
         print("No actions file")
+
+
+def save_actions_file(data):
+    print("Save actions json file")
+    actfile = open(ACTIONS_FILE, 'w')
+    json.dump(data, actfile)
+    actfile.close()
+    load_actions_file()
 
 def free_space():
     FS = os.statvfs("/")
@@ -143,10 +155,14 @@ def mqtt_boot_subscribe(topic, msg):
 
 #This function will look if there is an entry on the Actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
 def check_actions_file(message):
+    global Actions
     action = message["msg"]["action"]
     value = ""
     if "value" in message["msg"]: 
         value = message["msg"]["value"]
+    
+    Actions = Actions_Init | Actions
+
     if action in Actions:
         print("action {} in Actions will be executed with reduced context".format(action))
         try: 
