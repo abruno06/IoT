@@ -130,22 +130,21 @@ def mqtt_boot_subscribe(topic, msg):
     print(msg)
     global waitConfig
     try:
-        msgDict = json.loads(msg)
+        boot_message = json.loads(msg)
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
-        if msgDict["msg"]["action"] == "bootstrap":
-            print("Bootstrap")
-            config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
-            print(config)
+        if boot_message["msg"]["action"] == "bootstrap":
+            config = json.loads(binascii.a2b_base64(boot_message["msg"]["value"]))
+            print("Bootstrap Configuration:{}".format(config))
             save_init_file(config)
             update_boot_wifi()
             # load_init_file()
             waitConfig = False
-        if msgDict["msg"]["action"] == "id":
-            print("ID")
-            initconfig["board"]["name"] = msgDict["msg"]["value"]
+        if boot_message["msg"]["action"] == "id":
+            print("ID Received:{}".format(boot_message["msg"]["value"]))
+            initconfig["board"]["name"] = boot_message["msg"]["value"]
 
     except BaseException as e:
         print("An exception occurred during boot")
