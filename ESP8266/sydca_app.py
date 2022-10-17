@@ -26,11 +26,15 @@ mac = None
 rtc = RTC()
 Actions = None
 Actions_Init = None
+Debug = True
 
 BOOT_FILE = "boot.json"
 CONFIG_FILE = "config.json"
 ACTIONS_FILE = "actions.json"
 ACTIONS_INIT_FILE = "actions-init.json"
+
+def debug(text):
+    if Debug: print(text)
 
 def timeStr(rtcT):
     M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
@@ -55,7 +59,7 @@ def load_actions_init_file():
         global Actions_Init
         Actions_Init = json.load(actfile)
         actfile.close()
-        print(Actions_Init)
+        debug(Actions_Init)
     else:
         print("No actions file")
 
@@ -65,7 +69,7 @@ def load_actions_file():
         global Actions
         Actions = json.load(actfile)
         actfile.close()
-        print(Actions)
+        debug(Actions)
     else:
         print("No actions file")
 
@@ -126,12 +130,12 @@ def do_wifi_connect(config):
         machine.reset()
 
 def mqtt_boot_subscribe(topic, msg):
-    print(str(topic))
-    print(msg)
+    debug(str(topic))
+    debug(msg)
     global waitConfig
     try:
         boot_message = json.loads(msg)
-        print(boot_message)
+        debug(boot_message)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
@@ -356,13 +360,13 @@ def load_init_file():
     initfile = open(CONFIG_FILE, 'r')
     initconfig = json.load(initfile)
     initfile.close()
-    print(initconfig)
+    debug(initconfig)
     #Load the action_init file one time for all
     load_actions_init_file()
     #Intentiate the Sensors 
     Sensors = sensors(initconfig)
-    mqttc.disconnect()
-    #
+   # mqttc.disconnect()
+    # 
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
     Sensors.send_dht_info(mqttc)
@@ -370,7 +374,7 @@ def load_init_file():
     print("Running MQTT pub/sub")
     gc.collect()
     print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-    print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
+    print("Update Frequency is {} sec".format(initconfig["mqtt"]["update"]))
     pubtime = time()
     while True:
         try:
