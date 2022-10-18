@@ -82,42 +82,44 @@ class sensors:
      #   }
 
         if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
-            try:
+            
                 if (self.ssd1306 is None):
-                    print("sensors: SSD1306 OLED initializing")
-                    import ssd1306
-                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
-                    self.ssd1306.fill(0)
-                    self.ssd1306.text(self.config["board"]["id"],0,18)
-                    self.ssd1306.show()
-                    print("sensors: SSD1306 OLED initialized")
-            except BaseException as e:
-                print("sensors:An exception occurred during ssd1306 activation")
-                import sys
-                sys.print_exception(e)
+                    try:
+                        print("sensors: SSD1306 OLED initializing")
+                        import ssd1306
+                        self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                        self.ssd1306.fill(0)
+                        self.ssd1306.text(self.config["board"]["id"],0,18)
+                        self.ssd1306.show()
+                        print("sensors: SSD1306 OLED initialized")
+                    except BaseException as e:
+                        print("sensors:An exception occurred during ssd1306 activation")
+                        import sys
+                        sys.print_exception(e)
 
 
         if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
-            try:
+            
                 if (self.bme280 is None):
-                    print("sensors: bme280 initializing")
-                    import bme280_i2c
-                    self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
-                    self.bme280.set_measurement_settings(
-                    {
+                    try:
+                        print("sensors: bme280 initializing")
+                        import bme280_i2c
+                        self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                        self.bme280.set_measurement_settings(
+                        {
                         'filter': bme280_i2c.BME280_FILTER_COEFF_16,
                         'standby_time': bme280_i2c.BME280_STANDBY_TIME_500_US,
                         'osr_h': bme280_i2c.BME280_OVERSAMPLING_1X,
                         'osr_p': bme280_i2c.BME280_OVERSAMPLING_16X,
                         'osr_t': bme280_i2c.BME280_OVERSAMPLING_2X})
-                    self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
-                    time.sleep_ms(70)
-                    print(self.bme280.get_measurement())
-                    print("sensors: bme280 initialized")
-            except BaseException as e:
-                print("sensors:An exception occurred during bme280 activation")
-                import sys
-                sys.print_exception(e)        
+                        self.bme280.set_power_mode(bme280_i2c.BME280_NORMAL_MODE)
+                        time.sleep_ms(70)
+                        print(self.bme280.get_measurement())
+                        print("sensors: bme280 initialized")
+                    except BaseException as e:
+                        print("sensors:An exception occurred during bme280 activation")
+                        import sys
+                        sys.print_exception(e)        
         if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
             try:
                 if (self.veml6070 is None):
@@ -401,15 +403,28 @@ class sensors:
 
     def message_oled(self,value):
         try:
-            if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
-                import ssd1306
-                oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
-                oled.fill(0)
+            if (self.ssd1306 is None and "ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+                try:
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                    self.ssd1306.fill(0)
+                    self.ssd1306.text(self.config["board"]["id"],0,18)
+                    self.ssd1306.show()
+                    print("sensors: SSD1306 OLED initialized")
+                except BaseException as e:
+                    print("sensors:An exception occurred during ssd1306 activation")
+                    import sys
+                    sys.print_exception(e)
+            if (self.ssd1306 is not None and "ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+               
+                #oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                self.ssd1306.fill(0)
                 idx = 0
                 for line in value["message"]:
-                    oled.text(line, 0, idx*8)
-                    idx+=1 
-                oled.show()
+                     self.ssd1306.text(line, 0, idx*8)
+                     idx+=1 
+                self.ssd1306.show()
                 print("oled")
             else:
                 print("sensors: oled screen not activated") 
@@ -420,15 +435,28 @@ class sensors:
 
     def test_oled(self,value):
         try:
-            import ssd1306
-            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
-            oled.fill(0)
-            idx = 0
-            for line in value["message"]:
-                oled.text(line, 0, idx*8)
-                idx+=1 
-            oled.show()
-            print("oled")
+            if (self.ssd1306 is None and "ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+                try:
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+                    self.ssd1306.fill(0)
+                    self.ssd1306.text(self.config["board"]["id"],0,18)
+                    self.ssd1306.show()
+                    print("sensors: SSD1306 OLED initialized")
+                except BaseException as e:
+                    print("sensors:An exception occurred during ssd1306 activation")
+                    import sys
+                    sys.print_exception(e)
+            if (self.ssd1306 is not None and "ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+                self.ssd1306  = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
+                self.ssd1306 .fill(0)
+                idx = 0
+                for line in value["message"]:
+                    self.ssd1306 .text(line, 0, idx*8)
+                    idx+=1 
+                self.ssd1306.show()
+                print("oled")
         except BaseException as e:
             print("sensors:An exception occurred during oled test")
             import sys
