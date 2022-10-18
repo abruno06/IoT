@@ -92,7 +92,7 @@ class sensors:
                     self.ssd1306.show()
                     print("sensors: SSD1306 OLED initialized")
             except BaseException as e:
-                print("sensors:An exception occurred during mcp23017 activation")
+                print("sensors:An exception occurred during ssd1306 activation")
                 import sys
                 sys.print_exception(e)
 
@@ -358,7 +358,7 @@ class sensors:
     
     def free_space(self):
         FS = os.statvfs("/")
-        return """size={r_size} free={r_free}""".format(r_size=FS[0],r_free=FS[3])
+        return """size={r_size} available={r_available} free={r_free}""".format(r_size=FS[0],r_free=FS[3],r_available=FS[2])
     def free_memory(self):
         return   """free={} used={}""".format(gc.mem_free(), gc.mem_alloc())
 
@@ -368,6 +368,7 @@ class sensors:
                     print (osname)
                     gc.collect()
                     print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    print('FS information:{}'.format(self.free_space()))
                     message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime()),"fs": self.free_space(),"memory":self.free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], json.dumps(message))

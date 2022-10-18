@@ -170,7 +170,7 @@ def check_actions_file(message):
         print("action {} in Actions will be executed with reduced context".format(action))
         try: 
                 reduced_globals = {'message':message,'mqttc':mqttc,'Actions':Actions,'Sensors':Sensors,'IPAddr':IPAddr,'action':action,'value':value}
-                eval(Actions[action],reduced_globals)
+                eval(_tmp[action],reduced_globals)
         except BaseException as e:
                 print("An exception occurred during actions from local execution")
                 print("Be Aware for safety reason eval is running with limited global scope")
@@ -323,12 +323,13 @@ def do_mqtt_boot_connect(config):
         sys.print_exception(e)
 
 def do_mqtt_connect(config):
-    from umqtt.simple import MQTTClient
+    #from umqtt.simple import MQTTClient
+    from umqtt.robust import MQTTClient
     global mqttc
     try:
         # print(config)
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
-                       user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
+                       user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=30)
         registerjs = {}
         registerjs["id"] = config["board"]["id"]
         registerjs["flash_id"] = esp.flash_id()
@@ -354,7 +355,7 @@ def do_mqtt_connect(config):
 
 def load_init_file():
     global initconfig
-  #  global mqttc
+    global mqttc
     global Sensors
   #  global IPAddr
     initfile = open(CONFIG_FILE, 'r')
@@ -365,7 +366,17 @@ def load_init_file():
     load_actions_init_file()
     #Intentiate the Sensors 
     Sensors = sensors(initconfig)
-    mqttc.disconnect()
+    try:
+        mqttc.disconnect()
+        mqttc = None
+        gc.collect();
+        debug("Wait mqtt get disconnected")
+        sleep(5)
+    except BaseException as e:
+        print("An exception occurred during mqtt disconnect")
+        import sys
+        sys.print_exception(e)
+   
     # 
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
@@ -380,6 +391,7 @@ def load_init_file():
         try:
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
+                debug("Update in progress")
                 Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
                 Sensors.send_veml6070_info(mqttc)
