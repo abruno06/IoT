@@ -13,7 +13,7 @@ import sydca_ota
 import os
 print("")
 print("Load sydca_app")
-# from machine import I2C, Pin
+
 
 # Defined the globales variables
 
@@ -33,11 +33,6 @@ BOOT_FILE = "boot.json"
 CONFIG_FILE = "config.json"
 ACTIONS_FILE = "actions.json"
 ACTIONS_INIT_FILE = "actions-init.json"
-
-
-
-
-
 
 
 def load_actions_init_file():
@@ -61,10 +56,7 @@ def load_actions_file():
     else:
         print("No actions file")
 
-
-
  
-
 def save_init_file(data):
     print("Save Init file")
     initfile = open(CONFIG_FILE, 'w')
@@ -136,8 +128,6 @@ def mqtt_boot_subscribe(topic, msg):
         dump("An exception occurred during boot", e)
         sleep(30)
         machine.reset()
-
-# This function will look if there is an entry on the Actions from actions.json file and will eval it in reduced context (will make code easier to support and read)
 
 
 def check_actions_file(message):
