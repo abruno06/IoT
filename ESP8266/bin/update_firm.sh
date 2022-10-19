@@ -11,11 +11,10 @@ ampy -p /dev/ttyUSB0 put ../bme280_i2c.mpy
 ampy -p /dev/ttyUSB0 put ../mcp230xx.mpy
 ampy -p /dev/ttyUSB0 put ../veml6070_i2c.mpy
 
-ampy -p /dev/ttyUSB0 put ../boot.py
-ampy -p /dev/ttyUSB0 put ../main.py
 ampy -p /dev/ttyUSB0 put ../actions-init.json
 ampy -p /dev/ttyUSB0 put ../actions.json
 ampy -p /dev/ttyUSB0 put ../boot.json
+ampy -p /dev/ttyUSB0 put ../init.json
 
 ampy -p /dev/ttyUSB0 put ../boot.py
 ampy -p /dev/ttyUSB0 put ../main.py

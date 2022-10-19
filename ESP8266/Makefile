@@ -1,4 +1,4 @@
-MPY_APP = sydca_app.mpy sydca_ota.mpy sydca_sensors.mpy
+MPY_APP = sydca_app.mpy sydca_ota.mpy sydca_sensors.mpy helpers.mpy
 MPY_LIB = ads1x15.mpy bme280_i2c.mpy
 CONFIG = init.json actions.json actions-init.json
 
