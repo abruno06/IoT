@@ -34,8 +34,11 @@ class sensors:
     
     
 
+    def __init__(self):
+        print("loaded")
 
-    def __init__(self, config):
+
+    def initialise(self, config):
         self.config = config
         if (check_capability(config,"dht")):
             try:

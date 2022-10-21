@@ -1,4 +1,5 @@
 from time import sleep, time
+from micropython import const
 from machine import RTC
 from sydca_sensors import sensors
 from helpers import Debug, debug, dump, save_json_file,timeStr,file_exists
@@ -26,13 +27,24 @@ IPAddr = None
 mac = None
 rtc = RTC()
 Actions = None
-Actions_Init = None
+Actions_Init = {
+  "dht": "Sensors.send_dht_info(mqttc)",
+  "bme280": "Sensors.send_bme280_info(mqttc)",
+  "mcp": "Sensors.send_mcp_info(mqttc)",
+  "mcp_topic": "Sensors.send_mcp_info_topics(mqttc)",
+  "ds18b20": "Sensors.send_ds18b20_info(mqttc)",
+  "veml6070": "Sensors.send_veml6070_info(mqttc)",
+  "i2cscan": "Sensors.scan_i2c(mqttc)",
+  "mcp_set": "Sensors.set_mcp_info(value)",
+  "mcp_set_port": "Sensors.set_mcp_port_info(value)",
+  "ssd1306": "Sensors.message_oled(value)",
+  "test": "Sensors.test_oled(value)",
+  "hello": "Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])"
+}
 
-
-BOOT_FILE = "boot.json"
-CONFIG_FILE = "config.json"
+BOOT_FILE = const("boot.json")
+CONFIG_FILE = const("config.json")
 ACTIONS_FILE = "actions.json"
-ACTIONS_INIT_FILE = "actions-init.json"
 
 
 def load_actions_init_file():
@@ -346,9 +358,10 @@ def load_init_file():
         debug(initconfig)
     
     # Load the action_init file one time for all
-    load_actions_init_file()
+   # load_actions_init_file()
     # Intentiate the Sensors
-    Sensors = sensors(initconfig)
+    Sensors = sensors()
+    Sensors.initialise(initconfig)
     try:
         mqttc.disconnect()
         mqttc = None
