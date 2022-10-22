@@ -356,7 +356,7 @@ def load_init_file():
         initconfig = json.load(initfile)
         initfile.close()
         debug(initconfig)
-    
+     
     # Load the action_init file one time for all
    # load_actions_init_file()
     # Intentiate the Sensors
