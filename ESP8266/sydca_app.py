@@ -45,7 +45,7 @@ def do_wifi_connect(config):
             wlan.active(True)
             wlan.config(dhcp_hostname=config["board"]["id"])
             print('connecting to '+config['wifi']['ssid']+' network...')
-            mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+            mac = binascii.hexlify(network.WLAN().config('mac'),':').decode()
             print('Device MAC is:'+mac)
             wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
             while not wlan.isconnected():
@@ -77,7 +77,7 @@ def mqtt_boot_subscribe(topic, msg):
         print("searching for action")
         if msgDict["msg"]["action"] == "bootstrap":
             print("Bootstrap")
-            config = json.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
+            config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
             save_init_file(config)
             update_boot_wifi()
@@ -138,7 +138,7 @@ def mqtt_subscribe(topic, msg):
             Sensors.send_ds18b20_info(mqttc)
         if msgDict["msg"]["action"]=="ota":
             print("ota will be loaded")
-            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],ubinascii.a2b_base64(msgDict["msg"]["value"]["data"]))
+            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],binascii.a2b_base64(msgDict["msg"]["value"]["data"]))
             Sensors.send_health_info(mqttc)
         if msgDict["msg"]["action"]=="hello":
             print("hello will be loaded")
@@ -162,7 +162,7 @@ def mqtt_subscribe(topic, msg):
 
 
 def do_mqtt_boot_connect(config):
-    from mqtt.simple import MQTTClient
+    from umqtt.simple import MQTTClient
     global mqttc
     try:
         print("MQTT Server")
@@ -189,7 +189,7 @@ def do_mqtt_boot_connect(config):
       
 
 def do_mqtt_connect(config):
-    from mqtt.simple import MQTTClient
+    from umqtt.robust import MQTTClient
     global mqttc
     try:
         # print(config)
@@ -254,7 +254,6 @@ def load_init_file():
                 Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
                 Sensors.send_veml6070_info(mqttc)
-              
                 # send_dht_info(initconfig)
                 pubtime = time()
                 gc.collect()
