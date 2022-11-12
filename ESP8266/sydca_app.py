@@ -12,7 +12,6 @@ import sydca_ota
 from helpers import Debug, debug,info, dump,time_str,save_json_file,print_memory
 
 print("Load sydca_app")
-# from machine import I2C, Pin
 
 # Defined the globales variables
 
@@ -170,7 +169,7 @@ def mqtt_subscribe(topic, msg):
                     "Be Aware for safety reason eval is running with limited global scope")
                 info(reduced_globals)
     except BaseException as e:
-        dump("An exception occurred at subscribe stage")
+        dump("An exception occurred at subscribe stage",e)
 
 
 
