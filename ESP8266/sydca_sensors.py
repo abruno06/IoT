@@ -282,10 +282,8 @@ class sensors:
             else:
                 print("ds18b20 is not activated")     
         except BaseException as e:
-            print("sensors:An exception occurred during dht reading")
-            import sys
-            sys.print_exception(e)
-
+            dump("sensors:An exception occurred during dht reading",e)
+            
     def send_veml6070_info(self, mqttc):
         try:
             if (check_capability(self.config,"veml6070")):
@@ -316,9 +314,8 @@ class sensors:
             else:
                 print("veml6070_i2c is not activated")
         except BaseException as e:
-            print("sensors:An exception occurred during veml6070 reading")
-            import sys
-            sys.print_exception(e)
+            dump("sensors:An exception occurred during veml6070 reading",e)
+     
 
 
 
