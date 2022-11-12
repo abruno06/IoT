@@ -74,8 +74,9 @@ def mqtt_boot_subscribe(topic, msg):
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
+        action = msgDict["msg"]["action"]
         print("searching for action")
-        if msgDict["msg"]["action"] == "bootstrap":
+        if action == "bootstrap":
             print("Bootstrap")
             config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
@@ -83,7 +84,7 @@ def mqtt_boot_subscribe(topic, msg):
             update_boot_wifi()
             # load_init_file()
             waitConfig = False
-        if msgDict["msg"]["action"] == "id":
+        if action == "id":
             print("ID")
             initconfig["board"]["name"] = msgDict["msg"]["value"]
 
@@ -101,60 +102,75 @@ def mqtt_subscribe(topic, msg):
     print(str(topic))
     print(msg)
     try:
-        msgDict = json.loads(msg)
-        print(msgDict)
+        message = json.loads(msg)
+        print(message)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
-        if msgDict["msg"]["action"] == "dht":
+        action = message["msg"]["action"]
+
+        if  action == "dht":
             print("DHT")
             # send_dht_info(initconfig)
             Sensors.send_dht_info(mqttc)
-        if msgDict["msg"]["action"] == "bme280":
+        if action == "bme280":
             print("bme280")
             Sensors.send_bme280_info(mqttc)
-        if msgDict["msg"]["action"] == "id":
+        if action == "id":
             print("ID")
-            initconfig["board"]["name"] = msgDict["msg"]["value"]
-        if msgDict["msg"]["action"] == "boot":
+            initconfig["board"]["name"] = message["msg"]["value"]
+        if action == "boot":
             print("Boot")
             mqttc.disconnect()
             machine.reset()
             # boot_init()
-        if msgDict["msg"]["action"] == "mcp":
+        if action == "mcp":
             print("MCP")
             Sensors.send_mcp_info(mqttc)
-        if msgDict["msg"]["action"] == "mcp_topic":
+        if action == "mcp_topic":
             print("MCP")
             Sensors.send_mcp_info_topics(mqttc)
-        if msgDict["msg"]["action"] == "mcp_set":
+        if action == "mcp_set":
             print("MCP Set")
-            Sensors.set_mcp_info(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "mcp_set_port":
+            Sensors.set_mcp_info(message["msg"]["value"])
+        if action == "mcp_set_port":
             print("MCP Set Port")
-            Sensors.set_mcp_port_info(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "ds18b20":
+            Sensors.set_mcp_port_info(message["msg"]["value"])
+        if action == "ds18b20":
             print("ds18b20 read")
             Sensors.send_ds18b20_info(mqttc)
-        if msgDict["msg"]["action"]=="ota":
+        if action=="ota":
             print("ota will be loaded")
-            sydca_ota.save_ota_file(msgDict["msg"]["value"]["filename"],binascii.a2b_base64(msgDict["msg"]["value"]["data"]))
+            sydca_ota.save_ota_file(message["msg"]["value"]["filename"],binascii.a2b_base64(message["msg"]["value"]["data"]))
             Sensors.send_health_info(mqttc)
-        if msgDict["msg"]["action"]=="hello":
+        if action=="hello":
             print("hello will be loaded")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
-        if msgDict["msg"]["action"]=="i2cscan":
+        if action=="i2cscan":
             print("I2C Scan started")
             Sensors.scan_i2c(mqttc)
-        if msgDict["msg"]["action"]=="ssd1306":
+        if action=="ssd1306":
             print("I2C ssd1306 started")
-            Sensors.message_oled(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"]=="test":
+            Sensors.message_oled(message["msg"]["value"])
+        if action=="test":
             print("I2C TEST started")
-            Sensors.test_oled(msgDict["msg"]["value"])
-        if msgDict["msg"]["action"] == "veml6070":
+            Sensors.test_oled(message["msg"]["value"])
+        if action == "veml6070":
             print("veml6070 read")
             Sensors.send_veml6070_info(mqttc)
+        if action == "dynamic":
+            print("Dynamic function call")
+            try:
+                reduced_globals = {'message': message, 'mqttc': mqttc,
+                                   'Sensors': Sensors, 'IPAddr': IPAddr}
+                eval(message["msg"]["function"], reduced_globals)
+            except BaseException as e:
+                print("An exception occurred during dynamic execution")
+                print(
+                    "Be Aware for safety reason eval is running with limited global scope")
+                print(reduced_globals)
+                #import sys
+                sys.print_exception(e)
             
     except BaseException as e:
         dump("An exception occurred at subscribe stage")
