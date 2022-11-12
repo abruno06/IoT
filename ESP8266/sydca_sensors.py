@@ -1,7 +1,7 @@
 import machine
 import gc
 import json
-from helpers import Debug, debug,info, dump, timeStr, free_space,free_memory, check_capability
+from helpers import Debug, debug,info, dump, timeStr, free_space,free_memory, check_capability,print_memory
 import time
 from machine import RTC, I2C, Pin
 import binascii
@@ -316,7 +316,7 @@ class sensors:
                     osname = os.uname()
                     info(osname)
                     gc.collect()
-                    info('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    print_memory()
                     info('FS information:{}'.format(free_space()))
                     message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":timeStr(self.rtc.datetime()),"fs": free_space(),"memory":free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]

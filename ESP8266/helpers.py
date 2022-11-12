@@ -48,3 +48,7 @@ def save_json_file(data,filename):
 
 def check_capability(config,cap):
      return (cap in config["board"]["capabilities"] and config["board"]["capabilities"][cap])
+
+def print_memory():
+    info('Memory information free: {} allocated: {}'.format(
+        gc.mem_free(), gc.mem_alloc()))

@@ -9,7 +9,7 @@ import binascii
 import json
 import gc
 import sydca_ota
-from helpers import Debug, debug,info, dump, save_json_file,timeStr,file_exists
+from helpers import Debug, debug,info, dump,timeStr,save_json_file,print_memory
 
 print("Load sydca_app")
 # from machine import I2C, Pin
@@ -24,14 +24,6 @@ Sensors = None
 IPAddr = None
 mac = None
 rtc = RTC()
-
-
-def save_init_file(data):
-    print("Save Init file")
-    initfile = open('config.json', 'w')
-    json.dump(data, initfile)
-    initfile.close()
-
 
 def do_wifi_connect(config):
     global IPAddr
@@ -77,10 +69,10 @@ def mqtt_boot_subscribe(topic, msg):
         action = msgDict["msg"]["action"]
         print("searching for action")
         if action == "bootstrap":
-            print("Bootstrap")
+            info("Bootstrap")
             config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
-            print(config)
-            save_init_file(config)
+            debug(config)
+            save_json_file(config,'config.json')
             update_boot_wifi()
             # load_init_file()
             waitConfig = False
@@ -245,8 +237,7 @@ def load_init_file():
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
     gc.collect()
-    print('Memory information free: {} allocated: {}'.format(
-        gc.mem_free(), gc.mem_alloc()))
+    print_memory()
     print("Update Frequency is {} sec :{}".format(
         initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
     pubtime = time()
@@ -268,8 +259,7 @@ def load_init_file():
                 # send_dht_info(initconfig)
                 pubtime = time()
                 gc.collect()
-                print('Memory information free: {} allocated: {}'.format(
-        gc.mem_free(), gc.mem_alloc()))
+                print_memory()
         except BaseException as e:
             dump("An exception occurred:rebooting",e)
             sleep(60)
@@ -313,13 +303,8 @@ def update_boot_wifi():
     #},
 
     bootconfig["wifi"]=config["wifi"]
-
-    initfile = open('boot.json', 'w')
-    json.dump(bootconfig, initfile)
-    initfile.close()
-
+    save_json_file(bootconfig,'boot.json')
     print("Boot Wifi is updated")
-
 
 
 def main():
