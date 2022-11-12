@@ -2,6 +2,7 @@ import machine
 import gc
 import ujson
 import ubinascii
+from helpers import Debug, debug,info, dump, timeStr, save_json_file,check_capability
 
 #from time import sleep, time
 import time
@@ -33,7 +34,7 @@ class sensors:
 
     def __init__(self, config):
         self.config = config
-        if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
+        if check_capability(self.config,"dht"):
             try:
                
                 if self.dhtsensor is None:
@@ -42,9 +43,8 @@ class sensors:
                     self.dhtsensor = dht.DHT22(machine.Pin(
                      self.config["board"]["pins"]["dht"]))
             except BaseException as e:
-                print("sensors:An exception occurred during dht activation")
-                import sys
-                sys.print_exception(e)
+                dump("sensors:An exception occurred during dht activation",e)
+              
 
         if ("sda" in self.config["board"]["pins"] and "scl" in self.config["board"]["pins"]):
             try:
@@ -52,29 +52,26 @@ class sensors:
                     self.i2cbus = I2C(sda=Pin(self.config["board"]["pins"]["sda"]), scl=Pin(
                     self.config["board"]["pins"]["scl"]), freq=20000)
             except BaseException as e:
-                print("sensors:An exception occurred during I2C activation")
-                import sys
-                sys.print_exception(e)
-        if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"]):
+                dump("sensors:An exception occurred during I2C activation",e)
+              
+        if check_capability(self.config,"mcp23017"):
             try:
                 from mcp230xx import MCP23017
                 if (self.mcpboard is None):
-                  print("sensors: MCP Board initializing")
+                  info("sensors: MCP Board initializing")
                 self.mcpboard = MCP23017(self.i2cbus, address=int(
                     self.config["board"]["i2c"]["mcp23017"]))
-                print("sensors: MCP Set input ports")
+                debug("sensors: MCP Set input ports")
                 for pin_n in self.config["mcp23017"]["pins"]["input"]:
                     self.mcpboard.setup(pin_n, Pin.IN)
                     self.mcpboard.pullup(pin_n, True)
-                print("sensors: MCP Set output ports")
+                debug("sensors: MCP Set output ports")
                 for pin_n in self.config["mcp23017"]["pins"]["output"]:
                     self.mcpboard.setup(pin_n, Pin.OUT)
-                print("sensors: MCP Board initialized")
+                info("sensors: MCP Board initialized")
             except BaseException as e:
-                print("sensors:An exception occurred during mcp23017 activation")
-                import sys
-                sys.print_exception(e)
-                 #             "mcp23017":{
+                dump("sensors:An exception occurred during mcp23017 activation",e)
+              
      #   "pins":{
      #       "input":[0,1,2,3],
      #       "output":[4,5,6,7,8,9,10,11,12,13,14,15]
@@ -91,9 +88,8 @@ class sensors:
                     self.ssd1306.show()
                     print("sensors: SSD1306 OLED initialized")
             except BaseException as e:
-                print("sensors:An exception occurred during mcp23017 activation")
-                import sys
-                sys.print_exception(e)
+                dump("sensors:An exception occurred during mcp23017 activation",e)
+               
 
 
         if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
@@ -114,25 +110,22 @@ class sensors:
                     print(self.bme280.get_measurement())
                     print("sensors: bme280 initialized")
             except BaseException as e:
-                print("sensors:An exception occurred during bme280 activation")
-                import sys
-                sys.print_exception(e)        
-        if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+                dump("sensors:An exception occurred during bme280 activation",e)
+               
+        if check_capability(self.config,"veml6070"):
             try:
                 if (self.veml6070 is None):
-                     print("sensors: veml6070 initializing")
+                     info("sensors: veml6070 initializing")
                      import veml6070_i2c
                      self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
-                     print("sensors: veml6070 initialized")
+                     info("sensors: veml6070 initialized")
             except BaseException as e:
-                print("sensors:An exception occurred during veml6070 activation")
-                import sys
-                sys.print_exception(e)        
+                dump("sensors:An exception occurred during veml6070 activation",e)      
 
     
     def send_mcp_info(self, mqttc):
         try:
-            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
+            if (check_capability(self.config,"mcp23017") and "input" in self.config["mcp23017"]["pins"]):
                 input_list = self.config["mcp23017"]["pins"]["input"]
                 input_list_name = self.config["mcp23017"]["pins"]["input_name"]
                 mcpinput = self.mcpboard.input_pins(input_list)
@@ -146,13 +139,11 @@ class sensors:
             else:
                 print("mcp23017 is not activated")
         except BaseException as e:
-            print("sensors:An exception occurred during mcp reading")
-            import sys
-            sys.print_exception(e)
-
+            dump("sensors:An exception occurred during mcp reading",e)
+           
     def send_mcp_info_topics(self, mqttc):
         try:
-            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "input" in self.config["mcp23017"]["pins"]):
+            if (check_capability(self.config,"mcp23017")  and "input" in self.config["mcp23017"]["pins"]):
                 input_list = self.config["mcp23017"]["pins"]["input"]
                 input_list_name = self.config["mcp23017"]["pins"]["input_name"]
                 mcpinput = self.mcpboard.input_pins(input_list)
@@ -162,15 +153,14 @@ class sensors:
                     mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/input/"+str(input_list_name[i]), ujson.dumps(mcp_message))
             else:
-                print("mcp23017 is not activated")
+                debug("mcp23017 is not activated")
         except BaseException as e:
-            print("sensors:An exception occurred during mcp reading")
-            import sys
-            sys.print_exception(e)
+            dump("sensors:An exception occurred during mcp reading",e)
+            
 
     def set_mcp_info(self, value):
         try:
-            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "output" in self.config["mcp23017"]["pins"]):
+            if (check_capability(self.config,"mcp23017") and "output" in self.config["mcp23017"]["pins"]):
                 output_list = self.config["mcp23017"]["pins"]["output"]
                 for i in range(len(output_list)):
                     self.mcpboard.output(output_list[i], value[i])
@@ -179,29 +169,26 @@ class sensors:
             else:
                 print("mcp23017 is not available")
         except BaseException as e:
-            print("sensors:An exception occurred during mcp setting")
-            import sys
-            sys.print_exception(e)
+            dump("sensors:An exception occurred during mcp setting",e)
+         
 
     def set_mcp_port_info(self, value):
         try:
-            if ("mcp23017" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["mcp23017"] and "output" in self.config["mcp23017"]["pins"]):
+            if (check_capability(self.config,"mcp23017") and "output" in self.config["mcp23017"]["pins"]):
                 if (value["port"] in self.config["mcp23017"]["pins"]["output"]):
                     self.mcpboard.output(value["port"], value["state"])
-                    print("port "+str(value["port"])+":"+str(value["state"]))
+                    debug("port "+str(value["port"])+":"+str(value["state"]))
                 else:
-                    print(str(value["port"])+" not found")
-                print("mcp is set")
+                    debug(str(value["port"])+" not found")
+                info("mcp is set")
             else:
-                print("mcp23017 is not available")
+                debug("mcp23017 is not available")
         except BaseException as e:
-            print("sensors:An exception occurred during mcp setting")
-            import sys
-            sys.print_exception(e)
-
+            dump("sensors:An exception occurred during mcp setting",e)
+           
     def send_dht_info(self, mqttc):
         try:
-            if ("dht" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["dht"]):
+            if (check_capability(self.config,"dht")):
                 if self.dhtsensor is None:
                     import dht
                     print("sensors:Creating DHT sensor")
@@ -223,13 +210,12 @@ class sensors:
             else:
                 print("dht is not activated")
         except BaseException as e:
-            print("sensors:An exception occurred during dht reading")
-            import sys
-            sys.print_exception(e)
+            debug("sensors:An exception occurred during dht reading",e)
+          
 
     def send_bme280_info(self, mqttc):
         try:
-            if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+            if (check_capability(self.config,"bme280")):
                 if self.bme280 is None:
                     if (self.bme280 is None):
                         print("sensors: bme280 initializing")
@@ -253,7 +239,7 @@ class sensors:
                 results = self.bme280.get_measurement()
                 print(self.bme280.get_measurement_settings())
             #    self.bme280.set_power_mode(bme280_i2c.BME280_SLEEP_MODE)
-                print(self.PrintTime(self.rtc.datetime()))
+                print(timeStr(self.rtc.datetime()))
                 print(results)
             
                 mpejst = {}
@@ -272,13 +258,12 @@ class sensors:
             else:
                 print("bme280 is not activated")
         except BaseException as e:
-            print("sensors:An exception occurred during bme280 reading")
-            import sys
-            sys.print_exception(e)
+            dump("sensors:An exception occurred during bme280 reading",e)
+           
 
     def send_ds18b20_info(self, mqttc):
         try:
-            if ("ds18b20" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ds18b20"]):
+            if (check_capability(self.config,"ds18b20")):
                 import onewire
                 import ds18x20
                 
@@ -303,7 +288,7 @@ class sensors:
 
     def send_veml6070_info(self, mqttc):
         try:
-            if ("veml6070" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["veml6070"]):
+            if (check_capability(self.config,"veml6070")):
                 if self.veml6070 is None:
                      print("sensors: veml6070 initializing")
                      import veml6070_i2c
@@ -337,30 +322,20 @@ class sensors:
 
 
 
-    def PrintTime(self, rtcT):
-        M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
-        D = "0"+str(rtcT[2]) if (rtcT[2] < 10) else str(rtcT[2])
-        H = "0"+str(rtcT[4]) if (rtcT[4] < 10) else str(rtcT[4])
-        m = "0"+str(rtcT[5]) if (rtcT[5] < 10) else str(rtcT[5])
-        S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
-        return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
-    
+   
     
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
                     os = uos.uname()
                     print (os)
-                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":self.PrintTime(self.rtc.datetime())}
+                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":timeStr(self.rtc.datetime())}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], ujson.dumps(message))
                     print("health "+self.config["board"]["id"]+" ok")
            
         except BaseException as e:
-            print("sensors:An exception occurred during health reading")
-            import sys
-            sys.print_exception(e)
-
-
+            dump("sensors:An exception occurred during health reading",e)
+            
 
     def scan_i2c(self,mqttc):
         try:
@@ -376,13 +351,11 @@ class sensors:
                 mqttc.publish(self.config["board"]["i2c"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/address/"+str(device), ujson.dumps(message))
         except BaseException as e:
-            print("sensors:An exception occurred during I2C reading")
-            import sys
-            sys.print_exception(e)
-
+            dump("sensors:An exception occurred during I2C reading",e)
+          
     def message_oled(self,value):
         try:
-            if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+            if (check_capability(self.config,"ssd1306")):
                 import ssd1306
                 oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
                 oled.fill(0)
@@ -395,9 +368,8 @@ class sensors:
             else:
                 print("sensors: oled screen not activated") 
         except BaseException as e:
-            print("sensors:An exception occurred during oled message")
-            import sys
-            sys.print_exception(e)
+            dump("sensors:An exception occurred during oled message",e)
+        
 
     def test_oled(self,value):
         try:
@@ -411,6 +383,4 @@ class sensors:
             oled.show()
             print("oled")
         except BaseException as e:
-            print("sensors:An exception occurred during oled test")
-            import sys
-            sys.print_exception(e)            
+            dump("sensors:An exception occurred during oled test",e)          

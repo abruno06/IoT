@@ -9,6 +9,8 @@ import ubinascii
 import ujson
 import gc
 import sydca_ota
+from helpers import Debug, debug,info, dump, save_json_file,timeStr,file_exists
+
 print("Load sydca_app")
 # from machine import I2C, Pin
 
@@ -22,15 +24,6 @@ Sensors = None
 IPAddr = None
 mac = None
 rtc = RTC()
-
-
-def timeStr(rtcT):
-    M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
-    D = "0"+str(rtcT[2]) if (rtcT[2] < 10) else str(rtcT[2])
-    H = "0"+str(rtcT[4]) if (rtcT[4] < 10) else str(rtcT[4])
-    m = "0"+str(rtcT[5]) if (rtcT[5] < 10) else str(rtcT[5])
-    S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
-    return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
 
 
 def save_init_file(data):
@@ -64,15 +57,11 @@ def do_wifi_connect(config):
         try:
           ntptime.settime()  # set the rtc datetime from the remote server
         except BaseException as etime:
-            print("An exception occurred during do_wifi_connect time setting skip it")
-            import sys
-            sys.print_exception(etime)
+            dump("An exception occurred during do_wifi_connect time setting skip it",etime)
             sleep(10)
     # print(timeStr(rtc.datetime()))    # get the date and time in UTC
     except BaseException as e:
-        print("An exception occurred during do_wifi_connect")
-        import sys
-        sys.print_exception(e)
+        dump("An exception occurred during do_wifi_connect",e)
         sleep(10)
         machine.reset()
 
@@ -99,9 +88,7 @@ def mqtt_boot_subscribe(topic, msg):
             initconfig["board"]["name"] = msgDict["msg"]["value"]
 
     except BaseException as e:
-        print("An exception occurred during boot")
-        import sys
-        sys.print_exception(e)
+        dump("An exception occurred during boot",e)
         sleep(30)
         machine.reset()
 
@@ -170,9 +157,7 @@ def mqtt_subscribe(topic, msg):
             Sensors.send_veml6070_info(mqttc)
             
     except BaseException as e:
-        print("An exception occurred at subscribe stage")
-        import sys
-        sys.print_exception(e)
+        dump("An exception occurred at subscribe stage")
 
 
 
@@ -200,9 +185,8 @@ def do_mqtt_boot_connect(config):
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
     except BaseException as e:
-        print("An exception occurred during do_mqtt_boot_connect")
-        import sys
-        sys.print_exception(e)
+        dump("An exception occurred during do_mqtt_boot_connect",e)
+      
 
 def do_mqtt_connect(config):
     from umqtt.simple import MQTTClient
@@ -230,9 +214,8 @@ def do_mqtt_connect(config):
         mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
 
     except BaseException as e:
-        print("An exception occurred during do_mqtt_connect")
-        import sys
-        sys.print_exception(e)
+        dump("An exception occurred during do_mqtt_connect",e)
+       
 
 def load_init_file():
     global initconfig
@@ -264,9 +247,7 @@ def load_init_file():
                 pubtime = time()
                 gc.collect()
         except BaseException as e:
-            print("An exception occurred:rebooting")
-            import sys
-            sys.print_exception(e)
+            dump("An exception occurred:rebooting",e)
             sleep(60)
             machine.reset()
 
@@ -329,8 +310,7 @@ def main():
     try:
         boot_init()
     except OSError as err:
-        print("OS error >: {0}".format(err))
-    # print(initfile.readlines())
+        dump("OS error >: {0}".format(err),err)
     print("Start Running Mode")
     load_init_file()
 
