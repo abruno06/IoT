@@ -1,5 +1,5 @@
 from time import sleep, time
-from machine import RTC
+from machine import RTC,Timer
 from sydca_sensors import sensors
 import re
 import esp
@@ -25,6 +25,12 @@ IPAddr = None
 mac = None
 rtc = RTC()
 
+
+def timeout_reboot_app():
+        info("an Operation take longer than expected, rebooting in 30 seconds")
+        sleep(30)
+        machine.reset()
+
 def do_wifi_connect(config):
     global IPAddr
     try:
@@ -34,6 +40,7 @@ def do_wifi_connect(config):
         wlan.active(False)
 
         if not wlan.isconnected():
+            Timer.init(mode=Timer.ONE_SHOT, period=30000, callback=timeout_reboot_app)
             wlan.active(True)
             wlan.config(dhcp_hostname=config["board"]["id"])
             print('connecting to '+config['wifi']['ssid']+' network...')
@@ -42,6 +49,7 @@ def do_wifi_connect(config):
             wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
             while not wlan.isconnected():
                 pass
+            Timer.deinit()
         print('network config:', wlan.ifconfig())
         IPAddr = wlan.ifconfig()
         import ntptime
@@ -168,8 +176,8 @@ def do_mqtt_boot_connect(config):
     from umqtt.simple import MQTTClient
     global mqttc
     try:
-        print("MQTT Server")
-        print(config["mqtt"]["server"])
+        info("MQTT Boot Server")
+        debug(config["mqtt"]["server"])
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
                        user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
         registerjs = {}
@@ -178,13 +186,12 @@ def do_mqtt_boot_connect(config):
         registerjs["msg"] = {'action': 'bootstrap'}
         registerjs["systemtime"] = timeStr(rtc.datetime())
         # registerjs["machine_id"]=str(machine.unique_id().decode())
-        print(registerjs)
+        debug(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
         # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
         mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
-        mqttc.set_callback(mqtt_boot_subscribe)
-         
+        mqttc.set_callback(mqtt_boot_subscribe)      
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
     except BaseException as e:
@@ -202,15 +209,11 @@ def do_mqtt_connect(config):
         registerjs["id"] = config["board"]["id"]
         registerjs["flash_id"] = esp.flash_id()
         # registerjs["machine_id"]=str(machine.unique_id().decode())
-        print(registerjs)
+        debug(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
         # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
         mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
-
-        #global dhtsensor
-        #dhtsensor = dht.DHT22(machine.Pin(config["board"]["pins"]["dht"]))
-
         mqttc.set_callback(mqtt_subscribe)
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
                     "/"+config["board"]["id"]+"/#", qos=1)
