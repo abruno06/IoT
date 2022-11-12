@@ -17,13 +17,13 @@ def dump(text, err):
     sys.print_exception(err)
 
 
-def timeStr(rtcT):
-    M = "0"+str(rtcT[1]) if (rtcT[1] < 10) else str(rtcT[1])
-    D = "0"+str(rtcT[2]) if (rtcT[2] < 10) else str(rtcT[2])
-    H = "0"+str(rtcT[4]) if (rtcT[4] < 10) else str(rtcT[4])
-    m = "0"+str(rtcT[5]) if (rtcT[5] < 10) else str(rtcT[5])
-    S = "0"+str(rtcT[6]) if (rtcT[6] < 10) else str(rtcT[6])
-    return str(rtcT[0])+M+D+" "+H+m+S+"."+str(rtcT[7])
+def time_str(rtc_time):
+    M = "0"+str(rtc_time[1]) if (rtc_time[1] < 10) else str(rtc_time[1])
+    D = "0"+str(rtc_time[2]) if (rtc_time[2] < 10) else str(rtc_time[2])
+    H = "0"+str(rtc_time[4]) if (rtc_time[4] < 10) else str(rtc_time[4])
+    m = "0"+str(rtc_time[5]) if (rtc_time[5] < 10) else str(rtc_time[5])
+    S = "0"+str(rtc_time[6]) if (rtc_time[6] < 10) else str(rtc_time[6])
+    return str(rtc_time[0])+M+D+" "+H+m+S+"."+str(rtc_time[7])
 
 def file_exists(filename):
     try:

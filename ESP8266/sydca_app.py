@@ -9,7 +9,7 @@ import binascii
 import json
 import gc
 import sydca_ota
-from helpers import Debug, debug,info, dump,timeStr,save_json_file,print_memory
+from helpers import Debug, debug,info, dump,time_str,save_json_file,print_memory
 
 print("Load sydca_app")
 # from machine import I2C, Pin
@@ -61,7 +61,7 @@ def do_wifi_connect(config):
         except BaseException as etime:
             dump("An exception occurred during do_wifi_connect time setting skip it",etime)
             sleep(10)
-    # print(timeStr(rtc.datetime()))    # get the date and time in UTC
+    # print(time_str(rtc.datetime()))    # get the date and time in UTC
     except BaseException as e:
         dump("An exception occurred during do_wifi_connect",e)
         sleep(10)
@@ -186,7 +186,7 @@ def do_mqtt_boot_connect(config):
         registerjs["id"] = config["board"]["id"]
         registerjs["flash_id"] = esp.flash_id()
         registerjs["msg"] = {'action': 'bootstrap'}
-        registerjs["systemtime"] = timeStr(rtc.datetime())
+        registerjs["systemtime"] = time_str(rtc.datetime())
         # registerjs["machine_id"]=str(machine.unique_id().decode())
         debug(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
@@ -257,7 +257,7 @@ def load_init_file():
     gc.collect()
     print_memory()
     print("Update Frequency is {} sec :{}".format(
-        initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
+        initconfig["mqtt"]["update"], time_str(rtc.datetime())))
  #   pubtime = time()
     try:
      #   Sensors.send_dht_info(mqttc)
