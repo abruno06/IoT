@@ -87,23 +87,21 @@ def mqtt_boot_subscribe(topic, msg):
         if action == "id":
             print("ID")
             initconfig["board"]["name"] = msgDict["msg"]["value"]
-
     except BaseException as e:
         dump("An exception occurred during boot",e)
         sleep(30)
         machine.reset()
-
 
 def mqtt_subscribe(topic, msg):
     global initconfig
     global mqttc
     global Sensors
     global IPAddr
-    print(str(topic))
-    print(msg)
+    info(str(topic))
+    debug(msg)
     try:
         message = json.loads(msg)
-        print(message)
+        debug(message)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
@@ -114,64 +112,61 @@ def mqtt_subscribe(topic, msg):
             # send_dht_info(initconfig)
             Sensors.send_dht_info(mqttc)
         if action == "bme280":
-            print("bme280")
+            info("bme280")
             Sensors.send_bme280_info(mqttc)
         if action == "id":
-            print("ID")
+            info("ID")
             initconfig["board"]["name"] = message["msg"]["value"]
         if action == "boot":
-            print("Boot")
+            info("Boot")
             mqttc.disconnect()
             machine.reset()
             # boot_init()
         if action == "mcp":
-            print("MCP")
+            info("MCP")
             Sensors.send_mcp_info(mqttc)
         if action == "mcp_topic":
-            print("MCP")
+            info("MCP")
             Sensors.send_mcp_info_topics(mqttc)
         if action == "mcp_set":
-            print("MCP Set")
+            info("MCP Set")
             Sensors.set_mcp_info(message["msg"]["value"])
         if action == "mcp_set_port":
-            print("MCP Set Port")
+            info("MCP Set Port")
             Sensors.set_mcp_port_info(message["msg"]["value"])
         if action == "ds18b20":
-            print("ds18b20 read")
+            info("ds18b20 read")
             Sensors.send_ds18b20_info(mqttc)
         if action=="ota":
-            print("ota will be loaded")
+            info("ota will be loaded")
             sydca_ota.save_ota_file(message["msg"]["value"]["filename"],binascii.a2b_base64(message["msg"]["value"]["data"]))
             Sensors.send_health_info(mqttc)
         if action=="hello":
-            print("hello will be loaded")
+            info("hello starting")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
         if action=="i2cscan":
-            print("I2C Scan starting")
+            info("I2C Scan starting")
             Sensors.scan_i2c(mqttc)
         if action=="ssd1306":
-            print("I2C ssd1306 update starting")
+            info("I2C ssd1306 update starting")
             Sensors.message_oled(message["msg"]["value"])
         if action=="test":
-            print("I2C TEST starting")
+            info("I2C TEST starting")
             Sensors.test_oled(message["msg"]["value"])
         if action == "veml6070":
-            print("veml6070 read")
+            info("veml6070 read")
             Sensors.send_veml6070_info(mqttc)
         if action == "dynamic":
-            print("Dynamic function call")
+            info("Dynamic function call")
             try:
                 reduced_globals = {'message': message, 'mqttc': mqttc,
                                    'Sensors': Sensors, 'IPAddr': IPAddr}
                 eval(message["msg"]["function"], reduced_globals)
             except BaseException as e:
-                print("An exception occurred during dynamic execution")
-                print(
+                dump("An exception occurred during dynamic execution",e)
+                info(
                     "Be Aware for safety reason eval is running with limited global scope")
-                print(reduced_globals)
-                #import sys
-                sys.print_exception(e)
-            
+                info(reduced_globals)
     except BaseException as e:
         dump("An exception occurred at subscribe stage")
 

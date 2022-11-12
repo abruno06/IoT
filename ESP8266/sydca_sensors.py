@@ -2,8 +2,6 @@ import machine
 import gc
 import json
 from helpers import Debug, debug,info, dump, timeStr, free_space,free_memory, check_capability
-
-#from time import sleep, time
 import time
 from machine import RTC, I2C, Pin
 import binascii
@@ -211,7 +209,6 @@ class sensors:
         except BaseException as e:
             debug("sensors:An exception occurred during dht reading",e)
           
-
     def send_bme280_info(self, mqttc):
         try:
             if (check_capability(self.config,"bme280")):
@@ -255,11 +252,10 @@ class sensors:
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
                                self.config["board"]["id"]+"/pressure", json.dumps(mpejsp))
             else:
-                print("bme280 is not activated")
+                info("bme280 is not activated")
         except BaseException as e:
             dump("sensors:An exception occurred during bme280 reading",e)
            
-
     def send_ds18b20_info(self, mqttc):
         try:
             if (check_capability(self.config,"ds18b20")):
@@ -277,9 +273,9 @@ class sensors:
                     message = {"value": ds.read_temp(rom)}
                     mqttc.publish(self.config["ds18b20"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/temperature/"+probeId, json.dumps(message))
-                    print("Probe "+probeId+" : "+str(ds.read_temp(rom)))
+                    debug("Probe "+probeId+" : "+str(ds.read_temp(rom)))
             else:
-                print("ds18b20 is not activated")     
+                info("ds18b20 is not activated")     
         except BaseException as e:
             dump("sensors:An exception occurred during dht reading",e)
             
@@ -287,17 +283,17 @@ class sensors:
         try:
             if (check_capability(self.config,"veml6070")):
                 if self.veml6070 is None:
-                     print("sensors: veml6070 initializing")
+                     info("sensors: veml6070 initializing")
                      import veml6070_i2c
                      self.veml6070 =veml6070_i2c.VEML6070(i2c_cmd=int(self.config["board"]["i2c"]["veml6070_cmd"]),i2c_low=int(self.config["board"]["i2c"]["veml6070_low"]),i2c_high=int(self.config["board"]["i2c"]["veml6070_high"]),i2c=self.i2cbus)
-                     print("sensors: veml6070 initialized")
+                     info("sensors: veml6070 initialized")
                      time.sleep(5)
                
                 import veml6070_i2c
                 results = self.veml6070.uv_raw
-                print(self.veml6070.get_index(results))
-                print(results)
-                print(self.PrintTime(self.rtc.datetime()))
+                debug(self.veml6070.get_index(results))
+                debug(results)
+                debug(self.PrintTime(self.rtc.datetime()))
             
                 mpejsu = {}
                 mpejsi = {}
@@ -311,21 +307,21 @@ class sensors:
                                self.config["board"]["id"]+"/uv_index", json.dumps(mpejsi))
               
             else:
-                print("veml6070_i2c is not activated")
+                info("veml6070_i2c is not activated")
         except BaseException as e:
             dump("sensors:An exception occurred during veml6070 reading",e)
     
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
                     osname = os.uname()
-                    print (osname)
+                    info(osname)
                     gc.collect()
-                    print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-                    print('FS information:{}'.format(free_space()))
+                    info('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    info('FS information:{}'.format(free_space()))
                     message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":timeStr(self.rtc.datetime()),"fs": free_space(),"memory":free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"], json.dumps(message))
-                    print("health "+self.config["board"]["id"]+" ok")
+                    debug("health "+self.config["board"]["id"]+" ok")
         except BaseException as e:
             dump("sensors:An exception occurred during health reading",e)
             
