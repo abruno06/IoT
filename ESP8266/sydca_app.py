@@ -243,6 +243,7 @@ def load_init_file():
         try:
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
+                debug("Update in progress")
                 Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
                 Sensors.send_veml6070_info(mqttc)
