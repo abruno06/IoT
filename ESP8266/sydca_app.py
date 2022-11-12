@@ -30,11 +30,12 @@ def timeout_reboot_app(t):
         sleep(30)
         machine.reset()
 
-timeout = Timer(-1)
+update = Timer(-1)
 
 def do_wifi_connect(config):
     global IPAddr
     global mac
+    timeout = Timer(-1)
     try:
         ap_if = network.WLAN(network.AP_IF)
         ap_if.active(False)
@@ -223,7 +224,18 @@ def do_mqtt_connect(config):
     except BaseException as e:
         dump("An exception occurred during do_mqtt_connect",e)
        
-
+def do_cycle(t):
+    debug("Update in progress:{}".format(t))
+    Sensors.display_update()
+    Sensors.send_bme280_info(mqttc)
+    gc.collect()              
+    Sensors.send_veml6070_info(mqttc)
+    gc.collect()
+    Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+    # send_dht_info(initconfig)
+    gc.collect()
+    print_memory()
+    
 def load_init_file():
     global initconfig
     global mqttc
@@ -246,32 +258,35 @@ def load_init_file():
     print_memory()
     print("Update Frequency is {} sec :{}".format(
         initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
-    pubtime = time()
+ #   pubtime = time()
     try:
      #   Sensors.send_dht_info(mqttc)
-        Sensors.send_bme280_info(mqttc) 
-        Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+        #Sensors.send_bme280_info(mqttc) 
+        #Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+        do_cycle('Init')
     except BaseException as e:
         dump("Early sensors check failed",e)
 
+   
+    #         if (time()-pubtime) >= initconfig["mqtt"]["update"]:
+    #             debug("Update in progress")
+    #     #        Sensors.send_dht_info(mqttc)
+    #             Sensors.send_bme280_info(mqttc)                
+    #             Sensors.send_veml6070_info(mqttc)
+    #             # send_dht_info(initconfig)
+    #             pubtime = time()
+    #             gc.collect()
+    #             print_memory()
+    update.init(mode=Timer.PERIODIC,period=initconfig["mqtt"]["update"]*1000, callback=do_cycle)
+
     while True:
         try: 
-            mqttc.check_msg()
-            if (time()-pubtime) >= initconfig["mqtt"]["update"]:
-                debug("Update in progress")
-        #        Sensors.send_dht_info(mqttc)
-                Sensors.send_bme280_info(mqttc)                
-                Sensors.send_veml6070_info(mqttc)
-                # send_dht_info(initconfig)
-                pubtime = time()
-                gc.collect()
-                print_memory()
+            #mqttc.check_msg()
+            mqttc.wait_msg()
         except BaseException as e:
             dump("An exception occurred:rebooting",e)
             sleep(60)
-            machine.reset()
-
-
+            machine.reset() 
 
 
 def boot_init():

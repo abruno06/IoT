@@ -375,4 +375,18 @@ class sensors:
             self.ssd1306.show()
             info("ssd1306 updated")
         except BaseException as e:
-            dump("sensors:An exception occurred during oled test",e)          
+            dump("sensors:An exception occurred during oled test",e)    
+
+    def display_update(self):
+        if check_capability(self.config,"ssd1306"):
+            try:
+                if (self.ssd1306 is None):
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
+
+                self.ssd1306.text(self.config["board"]["id"],0,0)
+                self.ssd1306.text("updating",0,48)
+                self.ssd1306.show()
+            except BaseException as e:
+                dump("sensors:An exception occurred during update",e)
