@@ -233,7 +233,11 @@ def load_init_file():
     Sensors.send_dht_info(mqttc)
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
-    print("Update Frequency is "+str(initconfig["mqtt"]["update"])+" sec")
+    gc.collect()
+    print('Memory information free: {} allocated: {}'.format(
+        gc.mem_free(), gc.mem_alloc()))
+    print("Update Frequency is {} sec :{}".format(
+        initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
     pubtime = time()
     while True:
         try:
@@ -309,6 +313,7 @@ def main():
     print("Flash Size:"+str(esp.flash_size()))
     try:
         boot_init()
+        gc.collect()
     except OSError as err:
         dump("OS error >: {0}".format(err),err)
     print("Start Running Mode")
