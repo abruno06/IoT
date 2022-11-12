@@ -1,12 +1,12 @@
 from time import sleep, time
 from machine import RTC
 from sydca_sensors import sensors
-import ure
+import re
 import esp
 import network
 import machine
-import ubinascii
-import ujson
+import binascii
+import json
 import gc
 import sydca_ota
 from helpers import Debug, debug,info, dump, save_json_file,timeStr,file_exists
@@ -29,7 +29,7 @@ rtc = RTC()
 def save_init_file(data):
     print("Save Init file")
     initfile = open('config.json', 'w')
-    ujson.dump(data, initfile)
+    json.dump(data, initfile)
     initfile.close()
 
 
@@ -70,14 +70,14 @@ def mqtt_boot_subscribe(topic, msg):
     print(msg)
     global waitConfig
     try:
-        msgDict = ujson.loads(msg)
+        msgDict = json.loads(msg)
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         print("searching for action")
         if msgDict["msg"]["action"] == "bootstrap":
             print("Bootstrap")
-            config = ujson.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
+            config = json.loads(ubinascii.a2b_base64(msgDict["msg"]["value"]))
             print(config)
             save_init_file(config)
             update_boot_wifi()
@@ -101,7 +101,7 @@ def mqtt_subscribe(topic, msg):
     print(str(topic))
     print(msg)
     try:
-        msgDict = ujson.loads(msg)
+        msgDict = json.loads(msg)
         print(msgDict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
@@ -162,7 +162,7 @@ def mqtt_subscribe(topic, msg):
 
 
 def do_mqtt_boot_connect(config):
-    from umqtt.simple import MQTTClient
+    from mqtt.simple import MQTTClient
     global mqttc
     try:
         print("MQTT Server")
@@ -177,9 +177,9 @@ def do_mqtt_boot_connect(config):
         # registerjs["machine_id"]=str(machine.unique_id().decode())
         print(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
-        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
-        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
         mqttc.set_callback(mqtt_boot_subscribe)
          
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
@@ -189,7 +189,7 @@ def do_mqtt_boot_connect(config):
       
 
 def do_mqtt_connect(config):
-    from umqtt.simple import MQTTClient
+    from mqtt.simple import MQTTClient
     global mqttc
     try:
         # print(config)
@@ -201,9 +201,9 @@ def do_mqtt_connect(config):
         # registerjs["machine_id"]=str(machine.unique_id().decode())
         print(registerjs)
         #registerjs["capabilities"]= config["board"]["capabilities"]
-        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],ujson.dumps(registerjs))
+        # mqttc.set_last_will(config["mqtt"]["topic"]["unregister"],json.dumps(registerjs))
         mqttc.connect()
-        mqttc.publish(config["mqtt"]["topic"]["register"], ujson.dumps(registerjs))
+        mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
 
         #global dhtsensor
         #dhtsensor = dht.DHT22(machine.Pin(config["board"]["pins"]["dht"]))
@@ -223,14 +223,14 @@ def load_init_file():
     global Sensors
     global IPAddr
     initfile = open('config.json', 'r')
-    initconfig = ujson.load(initfile)
+    initconfig = json.load(initfile)
     initfile.close()
     print(initconfig)
     Sensors = sensors(initconfig)
     mqttc.disconnect()
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
-    Sensors.send_dht_info(mqttc)
+   
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
     gc.collect()
@@ -239,15 +239,22 @@ def load_init_file():
     print("Update Frequency is {} sec :{}".format(
         initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
     pubtime = time()
+    try:
+        Sensors.send_dht_info(mqttc)
+        Sensors.send_bme280_info(mqttc) 
+        Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+    except BaseException as e:
+        dump("Early bmp failed",e)
+
     while True:
-        try:
+        try: 
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
                 debug("Update in progress")
                 Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
                 Sensors.send_veml6070_info(mqttc)
-                Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+              
                 # send_dht_info(initconfig)
                 pubtime = time()
                 gc.collect()
@@ -261,11 +268,11 @@ def load_init_file():
 
 def boot_init():
     initfile = open('boot.json', 'r')
-    bootconfig = ujson.load(initfile)
+    bootconfig = json.load(initfile)
     initfile.close()
     bootconfig["board"] = {}
-    import ubinascii
-    machid = ubinascii.hexlify(machine.unique_id()).decode()
+    import binascii
+    machid = binascii.hexlify(machine.unique_id()).decode()
     #machid = ure.sub("\\\\x", "", machid)
     #machid = ure.sub("b'", "", machid)
     #machid = ure.sub("'", "", machid)
@@ -281,11 +288,11 @@ def boot_init():
 
 def update_boot_wifi():
     initfile = open('boot.json', 'r')
-    bootconfig = ujson.load(initfile)
+    bootconfig = json.load(initfile)
     initfile.close()
 
     configfile = open('config.json', 'r')
-    config = ujson.load(configfile)
+    config = json.load(configfile)
     configfile.close()
     
     #"wifi": {
@@ -296,7 +303,7 @@ def update_boot_wifi():
     bootconfig["wifi"]=config["wifi"]
 
     initfile = open('boot.json', 'w')
-    ujson.dump(bootconfig, initfile)
+    json.dump(bootconfig, initfile)
     initfile.close()
 
     print("Boot Wifi is updated")
@@ -307,9 +314,9 @@ def main():
     print("Hello Welcome to SYDCA ESP OS")
     print("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
-    machid = ure.sub("\\\\x", "", machid)
-    machid = ure.sub("b'", "", machid)
-    machid = ure.sub("'", "", machid)
+    machid = re.sub("\\\\x", "", machid)
+    machid = re.sub("b'", "", machid)
+    machid = re.sub("'", "", machid)
     print("Machine Id:"+str(machid))
     print("Flash Size:"+str(esp.flash_size()))
     try:
