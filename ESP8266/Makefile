@@ -1,4 +1,5 @@
 MPY_APP = sydca_app.mpy sydca_ota.mpy helpers.mpy
+MPY_SENSORS = sydca_sensors.mpy
 MPY_LIB = ads1x15.mpy bme280_i2c.mpy
 CONFIG = init.json actions.json actions-init.json
 
@@ -17,6 +18,8 @@ main:
 	ampy -p /dev/ttyUSB0 put main.py
 
 app: $(MPY_APP)
+
+sensors: $(MPY_SENSORS)
 	
 other:
 	ampy -p /dev/ttyUSB0 put sydca_ota.mpy

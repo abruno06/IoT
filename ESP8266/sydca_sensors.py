@@ -1,14 +1,13 @@
 import machine
 import gc
-import ujson
-import ubinascii
-from helpers import Debug, debug,info, dump, timeStr, save_json_file,check_capability
+import json
+from helpers import Debug, debug,info, dump, timeStr, free_space,free_memory, check_capability
 
 #from time import sleep, time
 import time
 from machine import RTC, I2C, Pin
-import ubinascii
-import uos
+import binascii
+import os
 
 # "board": {
 #       "id": "sydca_esp_001",
@@ -323,13 +322,15 @@ class sensors:
     
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
-                    os = uos.uname()
-                    print (os)
-                    message = {"value": "ok","version":os.version,"ipaddress":ipaddr,"ipmask":mask,"time":timeStr(self.rtc.datetime())}
+                    osname = os.uname()
+                    print (osname)
+                    gc.collect()
+                    print('Memory information free: {} allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+                    print('FS information:{}'.format(free_space()))
+                    message = {"value": "ok","version":osname.version,"ipaddress":ipaddr,"ipmask":mask,"time":timeStr(self.rtc.datetime()),"fs": free_space(),"memory":free_memory()}
                     mqttc.publish(self.config["board"]["system"]["topic"]["publish"]+"/" + self.config["board"]
-                                  ["id"], ujson.dumps(message))
+                                  ["id"], json.dumps(message))
                     print("health "+self.config["board"]["id"]+" ok")
-           
         except BaseException as e:
             dump("sensors:An exception occurred during health reading",e)
             
