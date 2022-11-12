@@ -28,17 +28,17 @@ class sensors:
     bme280 = None
     veml6070 = None #UV Sensor
     rtc = RTC()
+    config=None
 
     def __init__(self, config):
         self.config = config
         if check_capability(self.config,"dht"):
             try:
-               
                 if self.dhtsensor is None:
                     import dht
                     print("sensors:Creating DHT sensor")
                     self.dhtsensor = dht.DHT22(machine.Pin(
-                     self.config["board"]["pins"]["dht"]))
+                    self.config["board"]["pins"]["dht"]))
             except BaseException as e:
                 dump("sensors:An exception occurred during dht activation",e)
               
@@ -130,7 +130,6 @@ class sensors:
                 for i in range(len(input_list)):
                     mcp_message[input_list_name[i]] = {
                         "pin": input_list[i], "value": mcpinput[i]}
-
                 mqttc.publish(self.config["mcp23017"]["topic"]["publish"]+"/" +
                               self.config["board"]["id"]+"/inputs", json.dumps(mcp_message))
             else:

@@ -25,31 +25,32 @@ IPAddr = None
 mac = None
 rtc = RTC()
 
-
-def timeout_reboot_app():
-        info("an Operation take longer than expected, rebooting in 30 seconds")
+def timeout_reboot_app(t):
+        info("An operation take longer than expected, rebooting in 30 seconds: {}".format(t))
         sleep(30)
         machine.reset()
 
+timeout = Timer(-1)
+
 def do_wifi_connect(config):
     global IPAddr
+    global mac
     try:
         ap_if = network.WLAN(network.AP_IF)
         ap_if.active(False)
         wlan = network.WLAN(network.STA_IF)
         wlan.active(False)
-
-        if not wlan.isconnected():
-            Timer.init(mode=Timer.ONE_SHOT, period=30000, callback=timeout_reboot_app)
+        if not wlan.isconnected():            
+            timeout.init(mode=Timer.ONE_SHOT,period=40000, callback=timeout_reboot_app)
             wlan.active(True)
             wlan.config(dhcp_hostname=config["board"]["id"])
-            print('connecting to '+config['wifi']['ssid']+' network...')
             mac = binascii.hexlify(network.WLAN().config('mac'),':').decode()
-            print('Device MAC is:'+mac)
+            info('connecting to '+config['wifi']['ssid']+' network...')
+            info('Device MAC is:'+mac)
             wlan.connect(config['wifi']['ssid'], config['wifi']['password'])
             while not wlan.isconnected():
                 pass
-            Timer.deinit()
+            timeout.deinit()
         print('network config:', wlan.ifconfig())
         IPAddr = wlan.ifconfig()
         import ntptime
@@ -199,7 +200,7 @@ def do_mqtt_boot_connect(config):
       
 
 def do_mqtt_connect(config):
-    from umqtt.robust import MQTTClient
+    from umqtt.simple import MQTTClient
     global mqttc
     try:
         # print(config)
@@ -233,10 +234,12 @@ def load_init_file():
     initfile.close()
     print(initconfig)
     Sensors = sensors(initconfig)
-    mqttc.disconnect()
+    try:
+        mqttc.disconnect()
+    except BaseException as e:
+        dump("Error while doing mqtt work",e)
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
-   
     # send_dht_info(initconfig)
     print("Running MQTT pub/sub")
     gc.collect()
@@ -245,18 +248,18 @@ def load_init_file():
         initconfig["mqtt"]["update"], timeStr(rtc.datetime())))
     pubtime = time()
     try:
-        Sensors.send_dht_info(mqttc)
+     #   Sensors.send_dht_info(mqttc)
         Sensors.send_bme280_info(mqttc) 
         Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
     except BaseException as e:
-        dump("Early bmp failed",e)
+        dump("Early sensors check failed",e)
 
     while True:
         try: 
             mqttc.check_msg()
             if (time()-pubtime) >= initconfig["mqtt"]["update"]:
                 debug("Update in progress")
-                Sensors.send_dht_info(mqttc)
+        #        Sensors.send_dht_info(mqttc)
                 Sensors.send_bme280_info(mqttc)                
                 Sensors.send_veml6070_info(mqttc)
                 # send_dht_info(initconfig)
