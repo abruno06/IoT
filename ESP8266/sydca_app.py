@@ -147,13 +147,13 @@ def mqtt_subscribe(topic, msg):
             print("hello will be loaded")
             Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
         if action=="i2cscan":
-            print("I2C Scan started")
+            print("I2C Scan starting")
             Sensors.scan_i2c(mqttc)
         if action=="ssd1306":
-            print("I2C ssd1306 started")
+            print("I2C ssd1306 update starting")
             Sensors.message_oled(message["msg"]["value"])
         if action=="test":
-            print("I2C TEST started")
+            print("I2C TEST starting")
             Sensors.test_oled(message["msg"]["value"])
         if action == "veml6070":
             print("veml6070 read")

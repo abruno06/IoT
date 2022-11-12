@@ -314,11 +314,6 @@ class sensors:
                 print("veml6070_i2c is not activated")
         except BaseException as e:
             dump("sensors:An exception occurred during veml6070 reading",e)
-     
-
-
-
-   
     
     def send_health_info(self, mqttc,ipaddr,mask):
         try:
@@ -364,9 +359,9 @@ class sensors:
                     self.ssd1306.text(line, 0, idx*8)
                     idx+=1 
                 self.ssd1306.show()
-                print("oled")
+                info("ssd1306 updated")
             else:
-                print("sensors: oled screen not activated") 
+                info("sensors: oled screen not activated") 
         except BaseException as e:
             dump("sensors:An exception occurred during oled message",e)
         
@@ -383,6 +378,6 @@ class sensors:
                 self.ssd1306.text(line, 0, idx*8)
                 idx+=1 
             self.ssd1306.show()
-            print("oled")
+            info("ssd1306 updated")
         except BaseException as e:
             dump("sensors:An exception occurred during oled test",e)          
