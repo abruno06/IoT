@@ -273,6 +273,8 @@ def load_init_file():
                 # send_dht_info(initconfig)
                 pubtime = time()
                 gc.collect()
+                print('Memory information free: {} allocated: {}'.format(
+        gc.mem_free(), gc.mem_alloc()))
         except BaseException as e:
             dump("An exception occurred:rebooting",e)
             sleep(60)

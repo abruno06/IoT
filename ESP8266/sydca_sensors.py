@@ -76,7 +76,7 @@ class sensors:
      #       "output":[4,5,6,7,8,9,10,11,12,13,14,15]
      #   }
 
-        if ("ssd1306" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["ssd1306"]):
+        if check_capability(self.config,"ssd1306"):
             try:
                 if (self.ssd1306 is None):
                     print("sensors: SSD1306 OLED initializing")
@@ -91,7 +91,7 @@ class sensors:
                
 
 
-        if ("bme280" in self.config["board"]["capabilities"] and self.config["board"]["capabilities"]["bme280"]):
+        if check_capability(self.config,"bme280"):
             try:
                 if (self.bme280 is None):
                     print("sensors: bme280 initializing")
@@ -354,14 +354,16 @@ class sensors:
     def message_oled(self,value):
         try:
             if (check_capability(self.config,"ssd1306")):
-                import ssd1306
-                oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))
-                oled.fill(0)
+                if (self.ssd1306 is None):
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))    
+                self.ssd1306.fill(0)
                 idx = 0
                 for line in value["message"]:
-                    oled.text(line, 0, idx*8)
+                    self.ssd1306.text(line, 0, idx*8)
                     idx+=1 
-                oled.show()
+                self.ssd1306.show()
                 print("oled")
             else:
                 print("sensors: oled screen not activated") 
@@ -371,14 +373,16 @@ class sensors:
 
     def test_oled(self,value):
         try:
-            import ssd1306
-            oled = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, 0x3c)
-            oled.fill(0)
+            if (self.ssd1306 is None):
+                    print("sensors: SSD1306 OLED initializing")
+                    import ssd1306
+                    self.ssd1306 = ssd1306.SSD1306_I2C(128, 64, self.i2cbus, int(self.config["board"]["i2c"]["ssd1306"]))    
+            self.ssd1306.fill(0)
             idx = 0
             for line in value["message"]:
-                oled.text(line, 0, idx*8)
+                self.ssd1306.text(line, 0, idx*8)
                 idx+=1 
-            oled.show()
+            self.ssd1306.show()
             print("oled")
         except BaseException as e:
             dump("sensors:An exception occurred during oled test",e)          
