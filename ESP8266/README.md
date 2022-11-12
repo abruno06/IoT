@@ -489,6 +489,11 @@ import port_diag
 Add the ADS1x15 extension board
 Add the 6750 uv reader extension board
 
+
+# About this branch
+
+the purpose of this branch is to be able to keep all capability but use less memory. in particular the mqtt message will be smaller
+
 # References
 
 * https://github.com/mchobby/esp8266-upy
