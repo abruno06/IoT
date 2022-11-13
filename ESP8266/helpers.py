@@ -6,10 +6,10 @@ Debug = True
 Info = True
 
 def debug(text):
-    if Debug: print(text)
+    if Debug: print("DEBUG:{}".format(text))
 
 def info(text):
-    if Info: print(text)
+    if Info: print("INFO:{}".format(text))
 
 def dump(text, err):
     print(text)
@@ -23,7 +23,8 @@ def time_str(rtc_time):
     H = "0"+str(rtc_time[4]) if (rtc_time[4] < 10) else str(rtc_time[4])
     m = "0"+str(rtc_time[5]) if (rtc_time[5] < 10) else str(rtc_time[5])
     S = "0"+str(rtc_time[6]) if (rtc_time[6] < 10) else str(rtc_time[6])
-    return str(rtc_time[0])+M+D+" "+H+m+S+"."+str(rtc_time[7])
+    return "{}{}{} {}{}{}.{}".format(rtc_time[0],M,D,H,m,S,rtc_time[7]) 
+   # str(rtc_time[0])+M+D+" "+H+m+S+"."+str(rtc_time[7])
 
 def file_exists(filename):
     try:
@@ -45,6 +46,13 @@ def save_json_file(data,filename):
     json.dump(data, _tmpfile)
     _tmpfile.close()
 
+def read_json_file(filename):
+    rdata = json.load('{}')
+    if file_exists(filename):
+         _tmpfile = open(CONFIG_FILE, 'r')
+        rdata = json.load(_tmpfile)
+        _tmpfile.close()
+    return rdata
 
 def check_capability(config,cap):
      return (cap in config["board"]["capabilities"] and config["board"]["capabilities"][cap])

@@ -9,7 +9,7 @@ import binascii
 import json
 import gc
 import sydca_ota
-from helpers import Debug, debug,info, dump,time_str,save_json_file,print_memory
+from helpers import Debug, debug,info, dump,time_str,save_json_file,read_json_file,print_memory
 
 print("Load sydca_app")
 
@@ -23,6 +23,9 @@ Sensors = None
 IPAddr = None
 mac = None
 rtc = RTC()
+
+BOOT_FILE=const("boot.json")
+CONFIG_FILE=const("config.json")
 
 def timeout_reboot_app(t):
         info("An operation take longer than expected, rebooting in 30 seconds: {}".format(t))
@@ -67,27 +70,27 @@ def do_wifi_connect(config):
         machine.reset()
 
 def mqtt_boot_subscribe(topic, msg):
-    print(str(topic))
-    print(msg)
+    info(str(topic))
+    debug(msg)
     global waitConfig
     try:
-        msgDict = json.loads(msg)
-        print(msgDict)
+        msg_dict = json.loads(msg)
+        print(msg_dict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
-        action = msgDict["msg"]["action"]
+        action = msg_dict["msg"]["action"]
         print("searching for action")
         if action == "bootstrap":
             info("Bootstrap")
-            config = json.loads(binascii.a2b_base64(msgDict["msg"]["value"]))
+            config = json.loads(binascii.a2b_base64(msg_dict["msg"]["value"]))
             debug(config)
-            save_json_file(config,'config.json')
+            save_json_file(config,CONFIG_FILE)
             update_boot_wifi()
             # load_init_file()
             waitConfig = False
         if action == "id":
             print("ID")
-            initconfig["board"]["name"] = msgDict["msg"]["value"]
+            initconfig["board"]["name"] = msg_dict["msg"]["value"]
     except BaseException as e:
         dump("An exception occurred during boot",e)
         sleep(30)
@@ -102,14 +105,12 @@ def mqtt_subscribe(topic, msg):
     debug(msg)
     try:
         message = json.loads(msg)
-        debug(message)
-        # print(initconfig)
-        # if str(topic)==initconfig["board"]["id"]:
-        print("searching for action")
         action = message["msg"]["action"]
-
+        debug(message)
+        debug("searching for action:{}".format(action))
+        
         if  action == "dht":
-            print("DHT")
+            info("DHT")
             # send_dht_info(initconfig)
             Sensors.send_dht_info(mqttc)
         if action == "bme280":
@@ -118,6 +119,7 @@ def mqtt_subscribe(topic, msg):
         if action == "id":
             info("ID")
             initconfig["board"]["name"] = message["msg"]["value"]
+            save_json_file(initconfig,CONFIG_FILE)
         if action == "boot":
             info("Boot")
             mqttc.disconnect()
@@ -240,10 +242,9 @@ def load_init_file():
     global mqttc
     global Sensors
     global IPAddr
-    initfile = open('config.json', 'r')
-    initconfig = json.load(initfile)
-    initfile.close()
-    print(initconfig)
+
+    initconfig = read_json_file(CONFIG_FILE)
+    debug(initconfig)
     Sensors = sensors(initconfig)
     try:
         mqttc.disconnect()
@@ -257,25 +258,12 @@ def load_init_file():
     print_memory()
     print("Update Frequency is {} sec :{}".format(
         initconfig["mqtt"]["update"], time_str(rtc.datetime())))
- #   pubtime = time()
     try:
-     #   Sensors.send_dht_info(mqttc)
-        #Sensors.send_bme280_info(mqttc) 
-        #Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
         do_cycle('Init')
     except BaseException as e:
         dump("Early sensors check failed",e)
 
-   
-    #         if (time()-pubtime) >= initconfig["mqtt"]["update"]:
-    #             debug("Update in progress")
-    #     #        Sensors.send_dht_info(mqttc)
-    #             Sensors.send_bme280_info(mqttc)                
-    #             Sensors.send_veml6070_info(mqttc)
-    #             # send_dht_info(initconfig)
-    #             pubtime = time()
-    #             gc.collect()
-    #             print_memory()
+    #Set a timer that will execute the periodic code (rather then While look)
     update.init(mode=Timer.PERIODIC,period=initconfig["mqtt"]["update"]*1000, callback=do_cycle)
 
     while True:
@@ -289,9 +277,7 @@ def load_init_file():
 
 
 def boot_init():
-    initfile = open('boot.json', 'r')
-    bootconfig = json.load(initfile)
-    initfile.close()
+    bootconfig = read_json_file(BOOT_FILE)
     bootconfig["board"] = {}
     import binascii
     machid = binascii.hexlify(machine.unique_id()).decode()
@@ -305,25 +291,13 @@ def boot_init():
     waitConfig = True
     while waitConfig:
          mqttc.check_msg() 
-
     print("Boot is completed")
 
 def update_boot_wifi():
-    initfile = open('boot.json', 'r')
-    bootconfig = json.load(initfile)
-    initfile.close()
-
-    configfile = open('config.json', 'r')
-    config = json.load(configfile)
-    configfile.close()
-    
-    #"wifi": {
-    #    "ssid": "sydca",
-    #    "password": "sydCA_Local_N_psk" 
-    #},
-
+    bootconfig=read_json_file(BOOT_FILE)
+    config = read_json_file(CONFIG_FILE)
     bootconfig["wifi"]=config["wifi"]
-    save_json_file(bootconfig,'boot.json')
+    save_json_file(bootconfig,BOOT_FILE)
     print("Boot Wifi is updated")
 
 
