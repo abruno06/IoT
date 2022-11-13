@@ -52,7 +52,7 @@ class sensors:
                 dump("sensors:An exception occurred during I2C activation",e)
  
         if check_capability(self.config,"mcp23017"):
-             sensorname="ssd1306"
+            sensorname="ssd1306"
             try:
                 
                 if (self.mcpboard is None):

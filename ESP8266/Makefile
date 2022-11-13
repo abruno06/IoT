@@ -24,6 +24,13 @@ sensors: $(MPY_SENSORS)
 other:
 	ampy -p /dev/ttyUSB0 put sydca_ota.mpy
 	ampy -p /dev/ttyUSB0 put sydca_sensors.mpy
+
+push:
+	ampy -p /dev/ttyUSB0 put sydca_ota.mpy
+	ampy -p /dev/ttyUSB0 put sydca_sensors.mpy
+	ampy -p /dev/ttyUSB0 put helpers.mpy
+	ampy -p /dev/ttyUSB0 put sydca_app.mpy
+	
 	
 lib: $(MPY_LIB)
 
