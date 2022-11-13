@@ -49,9 +49,9 @@ def save_json_file(data,filename):
 def read_json_file(filename):
     rdata = json.load('{}')
     if file_exists(filename):
-         _tmpfile = open(CONFIG_FILE, 'r')
-        rdata = json.load(_tmpfile)
-        _tmpfile.close()
+        tmpfile = open(CONFIG_FILE, 'r')
+        rdata = json.load(tmpfile)
+        tmpfile.close()
     return rdata
 
 def check_capability(config,cap):
