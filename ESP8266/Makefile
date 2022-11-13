@@ -30,7 +30,15 @@ push:
 	ampy -p /dev/ttyUSB0 put sydca_sensors.mpy
 	ampy -p /dev/ttyUSB0 put helpers.mpy
 	ampy -p /dev/ttyUSB0 put sydca_app.mpy
-	
+
+flash: push 
+	ampy -p /dev/ttyUSB0 put ads1x15.mpy
+	ampy -p /dev/ttyUSB0 put bme280_i2c.mpy
+	ampy -p /dev/ttyUSB0 put boot.json
+	ampy -p /dev/ttyUSB0 put boot.py
+	ampy -p /dev/ttyUSB0 put init.json
+	ampy -p /dev/ttyUSB0 put main.py
+	ampy -p /dev/ttyUSB0 put mcp230xx.mpy
 	
 lib: $(MPY_LIB)
 

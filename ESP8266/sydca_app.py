@@ -11,7 +11,7 @@ import gc
 import sydca_ota
 from helpers import Debug, debug,info, dump,time_str,save_json_file,read_json_file,print_memory
 
-print("Load sydca_app")
+info("Load sydca_app")
 
 # Defined the globales variablesmachi
 
@@ -54,10 +54,10 @@ def do_wifi_connect(config):
             while not wlan.isconnected():
                 pass
             timeout.deinit()
-        print('network config:', wlan.ifconfig())
+        info("network config:{}".format(wlan.ifconfig()))
         IPAddr = wlan.ifconfig()
         import ntptime
-        print('setting time')
+        debug('setting time')
         try:
           ntptime.settime()  # set the rtc datetime from the remote server
         except BaseException as etime:
@@ -75,13 +75,13 @@ def mqtt_boot_subscribe(topic, msg):
     global waitConfig
     try:
         msg_dict = json.loads(msg)
-        print(msg_dict)
+        debug(msg_dict)
         # print(initconfig)
         # if str(topic)==initconfig["board"]["id"]:
         action = msg_dict["msg"]["action"]
-        print("searching for action")
+        info("searching for action")
         if action == "bootstrap":
-            info("Bootstrap")
+            info(action)
             config = json.loads(binascii.a2b_base64(msg_dict["msg"]["value"]))
             debug(config)
             save_json_file(config,CONFIG_FILE)
@@ -89,7 +89,7 @@ def mqtt_boot_subscribe(topic, msg):
             # load_init_file()
             waitConfig = False
         if action == "id":
-            print("ID")
+            info(action)
             initconfig["board"]["name"] = msg_dict["msg"]["value"]
     except BaseException as e:
         dump("An exception occurred during boot",e)
@@ -227,6 +227,8 @@ def do_mqtt_connect(config):
        
 def do_cycle(t):
     debug("Update in progress:{}".format(t))
+    info("Update Frequency is {} sec :{}".format(
+        initconfig["mqtt"]["update"], time_str(rtc.datetime())))
     Sensors.display_update()
     Sensors.send_bme280_info(mqttc)
     gc.collect()              
@@ -253,11 +255,10 @@ def load_init_file():
     do_wifi_connect(initconfig)
     do_mqtt_connect(initconfig)
     # send_dht_info(initconfig)
-    print("Running MQTT pub/sub")
+    info("Running MQTT pub/sub")
     gc.collect()
     print_memory()
-    print("Update Frequency is {} sec :{}".format(
-        initconfig["mqtt"]["update"], time_str(rtc.datetime())))
+   
     try:
         do_cycle('Init')
     except BaseException as e:
@@ -291,31 +292,31 @@ def boot_init():
     waitConfig = True
     while waitConfig:
          mqttc.check_msg() 
-    print("Boot is completed")
+    info("Boot is completed")
 
 def update_boot_wifi():
     bootconfig=read_json_file(BOOT_FILE)
     config = read_json_file(CONFIG_FILE)
     bootconfig["wifi"]=config["wifi"]
     save_json_file(bootconfig,BOOT_FILE)
-    print("Boot Wifi is updated")
+    debug("Boot Wifi is updated")
 
 
 def main():
     print("Hello Welcome to SYDCA ESP OS")
-    print("Flash_id:"+str(esp.flash_id()))
+    info("Flash_id:"+str(esp.flash_id()))
     machid = str(machine.unique_id())
     machid = re.sub("\\\\x", "", machid)
     machid = re.sub("b'", "", machid)
     machid = re.sub("'", "", machid)
-    print("Machine Id:"+str(machid))
-    print("Flash Size:"+str(esp.flash_size()))
+    info("Machine Id:"+str(machid))
+    info("Flash Size:"+str(esp.flash_size()))
     try:
         boot_init()
         gc.collect()
     except OSError as err:
         dump("OS error >: {0}".format(err),err)
-    print("Start Running Mode")
+    info("Start operation mode")
     load_init_file()
 
 
