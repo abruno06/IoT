@@ -47,9 +47,9 @@ def save_json_file(data,filename):
     _tmpfile.close()
 
 def read_json_file(filename):
-    rdata = json.load('{}')
+    rdata = {}
     if file_exists(filename):
-        tmpfile = open(CONFIG_FILE, 'r')
+        tmpfile = open(filename, 'r')
         rdata = json.load(tmpfile)
         tmpfile.close()
     return rdata

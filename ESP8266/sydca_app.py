@@ -13,7 +13,7 @@ from helpers import Debug, debug,info, dump,time_str,save_json_file,read_json_fi
 
 print("Load sydca_app")
 
-# Defined the globales variables
+# Defined the globales variablesmachi
 
 mqttc = None
 dhtsensor = None
