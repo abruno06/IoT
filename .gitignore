@@ -6,3 +6,8 @@ ESP8266/config.json
 ESP8266/init-1.json
 
 .DS_Store
+
+
+**/.DS_Store
+**.log
+

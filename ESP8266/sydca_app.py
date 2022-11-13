@@ -69,6 +69,7 @@ def do_wifi_connect(config):
         sleep(10)
         machine.reset()
 
+
 def mqtt_boot_subscribe(topic, msg):
     info(str(topic))
     debug(msg)
@@ -173,6 +174,9 @@ def mqtt_subscribe(topic, msg):
     except BaseException as e:
         dump("An exception occurred at subscribe stage",e)
 
+    except BaseException as e:
+        dump("An exception occurred at subscribe stage",e)
+      
 
 
 def do_mqtt_boot_connect(config):
@@ -182,7 +186,7 @@ def do_mqtt_boot_connect(config):
         info("MQTT Boot Server")
         debug(config["mqtt"]["server"])
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
-                       user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
+                           user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
         registerjs = {}
         registerjs["id"] = config["board"]["id"]
         registerjs["flash_id"] = esp.flash_id()
@@ -196,18 +200,19 @@ def do_mqtt_boot_connect(config):
         mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
         mqttc.set_callback(mqtt_boot_subscribe)      
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
-                    "/"+config["board"]["id"]+"/#", qos=1)
+                        "/"+config["board"]["id"]+"/#", qos=1)
     except BaseException as e:
         dump("An exception occurred during do_mqtt_boot_connect",e)
       
 
 def do_mqtt_connect(config):
-    from umqtt.simple import MQTTClient
+    #from umqtt.simple import MQTTClient
+    from umqtt.robust import MQTTClient
     global mqttc
     try:
         # print(config)
         mqttc = MQTTClient(client_id=config["board"]["id"], server=config["mqtt"]["server"],
-                       user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=60)
+                           user=config["mqtt"]["user"], password=config["mqtt"]["password"], keepalive=30)
         registerjs = {}
         registerjs["id"] = config["board"]["id"]
         registerjs["flash_id"] = esp.flash_id()
@@ -219,7 +224,7 @@ def do_mqtt_connect(config):
         mqttc.publish(config["mqtt"]["topic"]["register"], json.dumps(registerjs))
         mqttc.set_callback(mqtt_subscribe)
         mqttc.subscribe(config["mqtt"]["topic"]["subscribe"] +
-                    "/"+config["board"]["id"]+"/#", qos=1)
+                        "/"+config["board"]["id"]+"/#", qos=1)
         mqttc.subscribe(config["mqtt"]["topic"]["broadcast"] + "/#", qos=1)
 
     except BaseException as e:
