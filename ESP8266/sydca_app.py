@@ -240,6 +240,7 @@ def do_cycle(t):
     Sensors.send_veml6070_info(mqttc)
     gc.collect()
     Sensors.send_health_info(mqttc,IPAddr[0],IPAddr[1])
+    Sensors.display_stop()
     # send_dht_info(initconfig)
     gc.collect()
     print_memory()
