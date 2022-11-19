@@ -219,12 +219,12 @@ class sensors:
     def send_bme280_info(self, mqttc):
         sensorname="bme280"
         try:
-            if (check_capability(self.config,"bme280")):
+            if (check_capability(self.config,sensorname)):
              
                 if (self.bme280 is None):
                         info(Init.format(sensorname))
                         import bme280_i2c
-                        self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"]["bme280"]))
+                        self.bme280 = bme280_i2c.BME280_I2C(i2c=self.i2cbus,address=int(self.config["board"]["i2c"][sensorname]))
                         self.bme280.set_measurement_settings(
                         {
                         'filter': bme280_i2c.BME280_FILTER_COEFF_16,
@@ -258,13 +258,14 @@ class sensors:
                 mqttc.publish(self.config["bme280"]["topic"]["publish"]+"/" +
                                self.config["board"]["id"]+"/pressure", json.dumps(mpejsp))
             else:
-                info("bme280 is not activated")
+                info("{} is not activated".format(sensorname))
         except BaseException as e:
-            dump("sensors:An exception occurred during bme280 reading",e)
+            dump("sensors:An exception occurred during {} reading".format(sensorname),e)
            
     def send_ds18b20_info(self, mqttc):
+        sensorname="ds18b20"
         try:
-            if (check_capability(self.config,"ds18b20")):
+            if (check_capability(self.config, sensorname)):
                 import onewire
                 import ds18x20
                 
@@ -277,18 +278,18 @@ class sensors:
                 for rom in roms:
                     probe_id = binascii.hexlify(rom).decode();
                     message = {"value": ds.read_temp(rom)}
-                    mqttc.publish(self.config["ds18b20"]["topic"]["publish"]+"/" + self.config["board"]
+                    mqttc.publish(self.config[sensorname]["topic"]["publish"]+"/" + self.config["board"]
                                   ["id"]+"/temperature/"+probe_id, json.dumps(message))
                     debug("Probe "+probe_id+" : "+str(ds.read_temp(rom)))
             else:
-                info("ds18b20 is not activated")     
+                info("{} is not activated".format( sensorname))     
         except BaseException as e:
-            dump("sensors:An exception occurred during dht reading",e)
+            dump("sensors:An exception occurred during {} reading".format( sensorname),e)
             
     def send_veml6070_info(self, mqttc):
         sensorname="veml6070"
         try:
-            if (check_capability(self.config,"veml6070")):
+            if (check_capability(self.config,sensorname)):
                 if self.veml6070 is None:
                      info(Init.format(sensorname))
                      import veml6070_i2c
@@ -349,7 +350,7 @@ class sensors:
     def message_oled(self,value):
         sensorname="ssd1306"
         try:
-            if (check_capability(self.config,"ssd1306")):
+            if (check_capability(self.config,sensorname)):
                 if (self.ssd1306 is None):
                     info(Init.format(sensorname))
                     import ssd1306
@@ -387,7 +388,7 @@ class sensors:
 
     def display_update(self):
         sensorname="ssd1306"
-        if check_capability(self.config,"ssd1306"):
+        if check_capability(self.config,sensorname):
             try:
                 if (self.ssd1306 is None):
                     info("sensors: {} initializing".format(sensorname))
@@ -402,7 +403,7 @@ class sensors:
             
     def display_stop(self):
         sensorname="ssd1306"
-        if check_capability(self.config,"ssd1306"):
+        if check_capability(self.config,sensorname):
             try:
                 if (self.ssd1306 is None):
                     info("sensors: {} initializing".format(sensorname))
